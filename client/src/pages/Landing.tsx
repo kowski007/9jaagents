@@ -14,6 +14,7 @@ import {
   Search,
   ArrowRight
 } from "lucide-react";
+import Layout from "@/components/Layout";
 
 export default function Landing() {
   const [, setLocation] = useLocation();
@@ -44,7 +45,8 @@ export default function Landing() {
   ];
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
+    <Layout>
+      <div className="min-h-screen bg-gradient-to-br from-gray-50 to-gray-100">
       {/* Hero Section */}
       <section className="bg-gradient-to-r from-primary to-green-600 text-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
@@ -187,6 +189,7 @@ export default function Landing() {
           </div>
         </div>
       </section>
-    </div>
+      </div>
+    </Layout>
   );
 }
