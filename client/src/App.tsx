@@ -11,7 +11,7 @@ import Marketplace from "@/pages/Marketplace";
 import Dashboard from "@/pages/Dashboard";
 import SellerDashboard from "@/pages/SellerDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
-import CreateAgent from "@/pages/CreateAgent";
+import ListAgent from "@/pages/CreateAgent";
 import Checkout from "@/pages/Checkout";
 import NotFound from "@/pages/not-found";
 
@@ -25,7 +25,7 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/seller-dashboard" component={SellerDashboard} />
       <Route path="/admin" component={AdminDashboard} />
-      <Route path="/create-agent" component={CreateAgent} />
+      <Route path="/create-agent" component={ListAgent} />
       <Route path="/checkout" component={Checkout} />
       <Route component={NotFound} />
     </Switch>

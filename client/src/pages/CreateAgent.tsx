@@ -1,64 +1,37 @@
 import { useEffect, useState } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { X, Plus, Bot, DollarSign, Clock, FileText } from "lucide-react";
-import { insertAgentSchema } from "@shared/schema";
+import { Skeleton } from "@/components/ui/skeleton";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Input } from "@/components/ui/input";
+import { 
+  Bot, 
+  Plus, 
+  Search, 
+  Eye, 
+  Edit, 
+  Trash2, 
+  MoreVertical,
+  DollarSign,
+  Clock,
+  Star,
+  TrendingUp,
+  Package
+} from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { isUnauthorizedError } from "@/lib/authUtils";
-import { apiRequest } from "@/lib/queryClient";
 import Layout from "@/components/Layout";
-import { z } from "zod";
 
-const createAgentFormSchema = insertAgentSchema.extend({
-  tags: z.string().optional(),
-  features: z.string().optional(),
-});
-
-type CreateAgentFormData = z.infer<typeof createAgentFormSchema>;
-
-export default function CreateAgent() {
+export default function ListAgent() {
   const { isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
-  const queryClient = useQueryClient();
-  const [tagInput, setTagInput] = useState("");
-  const [featureInput, setFeatureInput] = useState("");
-
-  const form = useForm<CreateAgentFormData>({
-    resolver: zodResolver(createAgentFormSchema),
-    defaultValues: {
-      title: "",
-      description: "",
-      categoryId: undefined,
-      basicPrice: "0",
-      standardPrice: "0",
-      premiumPrice: "0",
-      basicDescription: "",
-      standardDescription: "",
-      premiumDescription: "",
-      basicDeliveryDays: 1,
-      standardDeliveryDays: 3,
-      premiumDeliveryDays: 5,
-      tags: "",
-      features: "",
-      isActive: true,
-    },
-  });
-
-  const [tags, setTags] = useState<string[]>([]);
-  const [features, setFeatures] = useState<string[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState("all");
+  const [sortBy, setSortBy] = useState("newest");
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -75,83 +48,20 @@ export default function CreateAgent() {
     }
   }, [isAuthenticated, isLoading, toast]);
 
+  const { data: agents = [], isLoading: agentsLoading } = useQuery({
+    queryKey: ['/api/seller/agents'],
+    enabled: isAuthenticated,
+  });
+
   const { data: categories = [] } = useQuery({
     queryKey: ['/api/categories'],
     enabled: isAuthenticated,
   });
 
-  const createAgentMutation = useMutation({
-    mutationFn: async (data: CreateAgentFormData) => {
-      const agentData = {
-        ...data,
-        tags: tags.length > 0 ? tags : undefined,
-        features: features.length > 0 ? features : undefined,
-        basicPrice: parseFloat(data.basicPrice),
-        standardPrice: data.standardPrice ? parseFloat(data.standardPrice) : undefined,
-        premiumPrice: data.premiumPrice ? parseFloat(data.premiumPrice) : undefined,
-      };
-
-      const response = await apiRequest('POST', '/api/agents', agentData);
-      return response.json();
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['/api/seller/agents'] });
-      toast({
-        title: "Success",
-        description: "AI Agent created successfully!",
-      });
-      setLocation('/seller-dashboard');
-    },
-    onError: (error) => {
-      if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
-        setTimeout(() => {
-          window.location.href = "/api/login";
-        }, 500);
-        return;
-      }
-      toast({
-        title: "Error",
-        description: "Failed to create agent. Please try again.",
-        variant: "destructive",
-      });
-    },
-  });
-
-  const addTag = () => {
-    if (tagInput.trim() && !tags.includes(tagInput.trim())) {
-      setTags([...tags, tagInput.trim()]);
-      setTagInput("");
-    }
-  };
-
-  const removeTag = (tagToRemove: string) => {
-    setTags(tags.filter(tag => tag !== tagToRemove));
-  };
-
-  const addFeature = () => {
-    if (featureInput.trim() && !features.includes(featureInput.trim())) {
-      setFeatures([...features, featureInput.trim()]);
-      setFeatureInput("");
-    }
-  };
-
-  const removeFeature = (featureToRemove: string) => {
-    setFeatures(features.filter(feature => feature !== featureToRemove));
-  };
-
-  const onSubmit = (data: CreateAgentFormData) => {
-    createAgentMutation.mutate(data);
-  };
-
   if (isLoading) {
     return (
       <Layout>
-        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="text-center">Loading...</div>
         </div>
       </Layout>
@@ -162,339 +72,277 @@ export default function CreateAgent() {
     return null;
   }
 
+  const getCategoryName = (categoryId: number) => {
+    const category = categories.find((c: any) => c.id === categoryId);
+    return category?.name || "Unknown";
+  };
+
+  const filteredAgents = agents.filter((agent: any) => {
+    const matchesSearch = agent.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                         agent.description.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesStatus = statusFilter === "all" || 
+                         (statusFilter === "active" && agent.isActive) ||
+                         (statusFilter === "inactive" && !agent.isActive);
+    return matchesSearch && matchesStatus;
+  });
+
+  const sortedAgents = [...filteredAgents].sort((a: any, b: any) => {
+    switch (sortBy) {
+      case "newest":
+        return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+      case "oldest":
+        return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+      case "price_low":
+        return parseFloat(a.basicPrice) - parseFloat(b.basicPrice);
+      case "price_high":
+        return parseFloat(b.basicPrice) - parseFloat(a.basicPrice);
+      case "title":
+        return a.title.localeCompare(b.title);
+      default:
+        return 0;
+    }
+  });
+
   return (
     <Layout>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        {/* Header */}
+        <div className="flex items-center justify-between mb-8">
+          <div className="flex items-center">
+            <Bot className="h-8 w-8 text-primary mr-3" />
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900">My AI Agents</h1>
+              <p className="text-gray-600">Manage your AI agents and track their performance</p>
+            </div>
+          </div>
+          <Button onClick={() => setLocation('/create-agent')}>
+            <Plus className="mr-2 h-4 w-4" />
+            Create New Agent
+          </Button>
+        </div>
+
+        {/* Stats Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 font-medium">Total Agents</p>
+                  <p className="text-2xl font-bold text-gray-900">{agents.length}</p>
+                </div>
+                <div className="bg-blue-100 p-3 rounded-full">
+                  <Package className="h-6 w-6 text-blue-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-green-600 font-medium">Active</p>
+                  <p className="text-2xl font-bold text-green-700">
+                    {agents.filter((a: any) => a.isActive).length}
+                  </p>
+                </div>
+                <div className="bg-green-100 p-3 rounded-full">
+                  <TrendingUp className="h-6 w-6 text-green-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-purple-600 font-medium">Avg. Price</p>
+                  <p className="text-2xl font-bold text-purple-700">
+                    ${agents.length > 0 ? (agents.reduce((sum: number, a: any) => sum + parseFloat(a.basicPrice), 0) / agents.length).toFixed(0) : '0'}
+                  </p>
+                </div>
+                <div className="bg-purple-100 p-3 rounded-full">
+                  <DollarSign className="h-6 w-6 text-purple-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-orange-600 font-medium">This Month</p>
+                  <p className="text-2xl font-bold text-orange-700">
+                    {agents.filter((a: any) => {
+                      const agentDate = new Date(a.createdAt);
+                      const now = new Date();
+                      return agentDate.getMonth() === now.getMonth() && agentDate.getFullYear() === now.getFullYear();
+                    }).length}
+                  </p>
+                </div>
+                <div className="bg-orange-100 p-3 rounded-full">
+                  <Star className="h-6 w-6 text-orange-600" />
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Filters */}
+        <Card className="mb-8">
+          <CardContent className="p-6">
+            <div className="flex flex-col md:flex-row gap-4 items-center">
+              <div className="flex-1 min-w-0">
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                  <Input
+                    placeholder="Search your agents..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+              </div>
+              <Select value={statusFilter} onValueChange={setStatusFilter}>
+                <SelectTrigger className="w-full md:w-[180px]">
+                  <SelectValue placeholder="Filter by status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Status</SelectItem>
+                  <SelectItem value="active">Active Only</SelectItem>
+                  <SelectItem value="inactive">Inactive Only</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={sortBy} onValueChange={setSortBy}>
+                <SelectTrigger className="w-full md:w-[180px]">
+                  <SelectValue placeholder="Sort by" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="newest">Newest First</SelectItem>
+                  <SelectItem value="oldest">Oldest First</SelectItem>
+                  <SelectItem value="title">Title A-Z</SelectItem>
+                  <SelectItem value="price_low">Price: Low to High</SelectItem>
+                  <SelectItem value="price_high">Price: High to Low</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Agents List */}
         <Card>
           <CardHeader>
-            <div className="flex items-center">
-              <Bot className="h-8 w-8 text-primary mr-3" />
-              <div>
-                <CardTitle className="text-2xl">Create New AI Agent</CardTitle>
-                <p className="text-gray-600 mt-1">Set up your AI agent to start selling services</p>
-              </div>
-            </div>
+            <CardTitle className="flex items-center justify-between">
+              <span>Your Agents ({sortedAgents.length})</span>
+              {sortedAgents.length > 0 && (
+                <Button variant="outline" size="sm" onClick={() => setLocation('/marketplace')}>
+                  <Eye className="mr-2 h-4 w-4" />
+                  View in Marketplace
+                </Button>
+              )}
+            </CardTitle>
           </CardHeader>
-          <CardContent className="p-8">
-            <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-                {/* Basic Information */}
-                <div>
-                  <h3 className="text-lg font-semibold text-secondary mb-4 flex items-center">
-                    <FileText className="h-5 w-5 mr-2" />
-                    Basic Information
-                  </h3>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                    <FormField
-                      control={form.control}
-                      name="title"
-                      render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                          <FormLabel>Agent Title *</FormLabel>
-                          <FormControl>
-                            <Input {...field} placeholder="e.g., Professional Content Writer AI" />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="categoryId"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel>Category *</FormLabel>
-                          <Select onValueChange={(value) => field.onChange(parseInt(value))} value={field.value?.toString()}>
-                            <FormControl>
-                              <SelectTrigger>
-                                <SelectValue placeholder="Select a category" />
-                              </SelectTrigger>
-                            </FormControl>
-                            <SelectContent>
-                              {categories.map((category: any) => (
-                                <SelectItem key={category.id} value={category.id.toString()}>
-                                  {category.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-
-                    <FormField
-                      control={form.control}
-                      name="description"
-                      render={({ field }) => (
-                        <FormItem className="md:col-span-2">
-                          <FormLabel>Description *</FormLabel>
-                          <FormControl>
-                            <Textarea 
-                              {...field} 
-                              placeholder="Describe what your AI agent does and its capabilities..."
-                              rows={4}
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
+          <CardContent>
+            {agentsLoading ? (
+              <div className="space-y-4">
+                {Array.from({ length: 3 }).map((_, i) => (
+                  <div key={i} className="flex items-center space-x-4 p-4 border rounded-lg">
+                    <Skeleton className="h-16 w-16 rounded-lg" />
+                    <div className="flex-1">
+                      <Skeleton className="h-4 w-1/3 mb-2" />
+                      <Skeleton className="h-3 w-2/3 mb-2" />
+                      <Skeleton className="h-3 w-1/4" />
+                    </div>
+                    <div className="flex space-x-2">
+                      <Skeleton className="h-8 w-20" />
+                      <Skeleton className="h-8 w-8" />
+                    </div>
                   </div>
-                </div>
+                ))}
+              </div>
+            ) : sortedAgents.length === 0 ? (
+              <div className="text-center py-12">
+                <Bot className="h-16 w-16 text-gray-300 mx-auto mb-4" />
+                <h3 className="text-lg font-medium text-gray-900 mb-2">
+                  {agents.length === 0 ? "No agents created yet" : "No agents match your filters"}
+                </h3>
+                <p className="text-gray-500 mb-6">
+                  {agents.length === 0 
+                    ? "Create your first AI agent to start selling your services"
+                    : "Try adjusting your search or filters"
+                  }
+                </p>
+                {agents.length === 0 && (
+                  <Button onClick={() => setLocation('/create-agent')}>
+                    <Plus className="mr-2 h-4 w-4" />
+                    Create Your First Agent
+                  </Button>
+                )}
+              </div>
+            ) : (
+              <div className="space-y-4">
+                {sortedAgents.map((agent: any) => (
+                  <div key={agent.id} className="flex items-center space-x-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors">
+                    <div className="w-16 h-16 bg-gradient-to-br from-primary to-green-600 rounded-lg flex items-center justify-center">
+                      <Bot className="h-8 w-8 text-white" />
+                    </div>
 
-                <Separator />
-
-                {/* Tags */}
-                <div>
-                  <h4 className="text-md font-semibold text-secondary mb-3">Tags</h4>
-                  <div className="flex items-center space-x-2 mb-3">
-                    <Input
-                      value={tagInput}
-                      onChange={(e) => setTagInput(e.target.value)}
-                      placeholder="Add tags (e.g., writing, SEO, blog)"
-                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addTag())}
-                    />
-                    <Button type="button" onClick={addTag} variant="outline">
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {tags.map((tag, index) => (
-                      <Badge key={index} variant="secondary" className="flex items-center">
-                        {tag}
-                        <X 
-                          className="h-3 w-3 ml-1 cursor-pointer" 
-                          onClick={() => removeTag(tag)}
-                        />
-                      </Badge>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Features */}
-                <div>
-                  <h4 className="text-md font-semibold text-secondary mb-3">Features</h4>
-                  <div className="flex items-center space-x-2 mb-3">
-                    <Input
-                      value={featureInput}
-                      onChange={(e) => setFeatureInput(e.target.value)}
-                      placeholder="Add features (e.g., SEO optimization, unlimited revisions)"
-                      onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addFeature())}
-                    />
-                    <Button type="button" onClick={addFeature} variant="outline">
-                      <Plus className="h-4 w-4" />
-                    </Button>
-                  </div>
-                  <div className="space-y-2">
-                    {features.map((feature, index) => (
-                      <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                        <span className="text-sm">{feature}</span>
-                        <X 
-                          className="h-4 w-4 cursor-pointer text-red-500" 
-                          onClick={() => removeFeature(feature)}
-                        />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center space-x-2 mb-1">
+                        <h3 className="font-semibold text-gray-900 truncate">{agent.title}</h3>
+                        <Badge variant={agent.isActive ? "default" : "secondary"}>
+                          {agent.isActive ? "Active" : "Inactive"}
+                        </Badge>
+                        <Badge variant="outline">
+                          {getCategoryName(agent.categoryId)}
+                        </Badge>
                       </div>
-                    ))}
+                      <p className="text-sm text-gray-600 mb-2 line-clamp-2">{agent.description}</p>
+                      <div className="flex items-center space-x-4 text-sm text-gray-500">
+                        <div className="flex items-center">
+                          <DollarSign className="h-4 w-4 mr-1" />
+                          From ${agent.basicPrice}
+                        </div>
+                        <div className="flex items-center">
+                          <Clock className="h-4 w-4 mr-1" />
+                          {agent.basicDeliveryDays} days
+                        </div>
+                        <div className="flex items-center">
+                          <Star className="h-4 w-4 mr-1 text-yellow-400" />
+                          {agent.rating ? agent.rating.toFixed(1) : "New"}
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center space-x-2">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setLocation(`/agent/${agent.id}`)}
+                      >
+                        <Eye className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        onClick={() => setLocation(`/edit-agent/${agent.id}`)}
+                      >
+                        <Edit className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        className="text-gray-400 hover:text-gray-600"
+                      >
+                        <MoreVertical className="h-4 w-4" />
+                      </Button>
+                    </div>
                   </div>
-                </div>
-
-                <Separator />
-
-                {/* Pricing & Packages */}
-                <div>
-                  <h3 className="text-lg font-semibold text-secondary mb-4 flex items-center">
-                    <DollarSign className="h-5 w-5 mr-2" />
-                    Pricing & Packages
-                  </h3>
-                  
-                  {/* Basic Package */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    <Card className="border-2 border-primary">
-                      <CardHeader>
-                        <CardTitle className="text-lg">Basic Package *</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <FormField
-                          control={form.control}
-                          name="basicPrice"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Price ($)</FormLabel>
-                              <FormControl>
-                                <Input {...field} type="number" min="1" step="0.01" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="basicDeliveryDays"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Delivery Days</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  {...field} 
-                                  type="number" 
-                                  min="1" 
-                                  onChange={(e) => field.onChange(parseInt(e.target.value))}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="basicDescription"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Description</FormLabel>
-                              <FormControl>
-                                <Textarea {...field} rows={3} placeholder="What's included in the basic package?" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </CardContent>
-                    </Card>
-
-                    {/* Standard Package */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-lg">Standard Package</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <FormField
-                          control={form.control}
-                          name="standardPrice"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Price ($)</FormLabel>
-                              <FormControl>
-                                <Input {...field} type="number" min="0" step="0.01" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="standardDeliveryDays"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Delivery Days</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  {...field} 
-                                  type="number" 
-                                  min="1" 
-                                  onChange={(e) => field.onChange(parseInt(e.target.value))}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="standardDescription"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Description</FormLabel>
-                              <FormControl>
-                                <Textarea {...field} rows={3} placeholder="What's included in the standard package?" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </CardContent>
-                    </Card>
-
-                    {/* Premium Package */}
-                    <Card>
-                      <CardHeader>
-                        <CardTitle className="text-lg">Premium Package</CardTitle>
-                      </CardHeader>
-                      <CardContent className="space-y-4">
-                        <FormField
-                          control={form.control}
-                          name="premiumPrice"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Price ($)</FormLabel>
-                              <FormControl>
-                                <Input {...field} type="number" min="0" step="0.01" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="premiumDeliveryDays"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Delivery Days</FormLabel>
-                              <FormControl>
-                                <Input 
-                                  {...field} 
-                                  type="number" 
-                                  min="1" 
-                                  onChange={(e) => field.onChange(parseInt(e.target.value))}
-                                />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-
-                        <FormField
-                          control={form.control}
-                          name="premiumDescription"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Description</FormLabel>
-                              <FormControl>
-                                <Textarea {...field} rows={3} placeholder="What's included in the premium package?" />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </CardContent>
-                    </Card>
-                  </div>
-                </div>
-
-                <div className="flex items-center justify-between pt-6 border-t">
-                  <Button 
-                    type="button" 
-                    variant="outline" 
-                    onClick={() => setLocation('/seller-dashboard')}
-                  >
-                    Cancel
-                  </Button>
-                  <Button 
-                    type="submit" 
-                    disabled={createAgentMutation.isPending}
-                    className="min-w-[120px]"
-                  >
-                    {createAgentMutation.isPending ? 'Creating...' : 'Create Agent'}
-                  </Button>
-                </div>
-              </form>
-            </Form>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
       </div>
