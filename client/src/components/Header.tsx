@@ -14,11 +14,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Search, ShoppingCart, Bell, Menu, Bot } from "lucide-react";
 import CartSidebar from "./CartSidebar";
+import AuthModal from "./AuthModal";
 
 export default function Header() {
   const [, setLocation] = useLocation();
   const { user, isAuthenticated } = useAuth();
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
 
   const { data: cartItems = [] } = useQuery({
@@ -137,11 +139,11 @@ export default function Header() {
                 <div className="flex items-center space-x-3">
                   <Button 
                     variant="outline" 
-                    onClick={() => window.location.href = '/api/login'}
+                    onClick={() => setIsAuthModalOpen(true)}
                   >
                     Sign In
                   </Button>
-                  <Button onClick={() => window.location.href = '/api/login'}>
+                  <Button onClick={() => setIsAuthModalOpen(true)}>
                     Join Now
                   </Button>
                 </div>
@@ -152,6 +154,7 @@ export default function Header() {
       </header>
 
       <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
+      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
     </>
   );
 }

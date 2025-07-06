@@ -32,6 +32,7 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
+  hashedPassword: varchar("hashed_password"),
   role: varchar("role").default("user").notNull(), // user, seller, admin
   isActive: boolean("is_active").default(true).notNull(),
   sellerLevel: varchar("seller_level").default("none"), // none, level1, level2, top_rated
@@ -142,7 +143,14 @@ export const insertMessageSchema = createInsertSchema(messages).omit({ id: true,
 export const insertFavoriteSchema = createInsertSchema(favorites).omit({ createdAt: true });
 
 // Types
-export type UpsertUser = typeof users.$inferInsert;
+export type UpsertUser = {
+  id: string;
+  email: string;
+  firstName?: string | null;
+  lastName?: string | null;
+  profileImageUrl?: string | null;
+  hashedPassword?: string | null;
+};
 export type User = typeof users.$inferSelect;
 export type Category = typeof categories.$inferSelect;
 export type Agent = typeof agents.$inferSelect;

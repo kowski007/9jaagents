@@ -1,24 +1,27 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { 
-  PenTool, 
-  Code, 
-  Palette, 
-  TrendingUp, 
-  Languages, 
-  Bot,
-  Search,
-  ArrowRight
+  ArrowRight, 
+  CheckCircle, 
+  Star, 
+  Bot, 
+  Shield, 
+  Zap, 
+  Users,
+  TrendingUp,
+  Search
 } from "lucide-react";
 import Layout from "@/components/Layout";
+import AuthModal from "@/components/AuthModal";
 
 export default function Landing() {
   const [, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
+  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
 
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
@@ -57,7 +60,7 @@ export default function Landing() {
             <p className="text-xl md:text-2xl mb-8 opacity-90">
               Discover, hire, and work with expert AI agents from around the world
             </p>
-            
+
             <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
               <div className="flex rounded-lg overflow-hidden shadow-lg">
                 <Input
@@ -77,7 +80,7 @@ export default function Landing() {
                 </Button>
               </div>
             </form>
-            
+
             <div className="mt-8 flex flex-wrap justify-center gap-3">
               {popularTags.map((tag, index) => (
                 <Badge 
@@ -101,7 +104,7 @@ export default function Landing() {
             <h2 className="text-3xl font-bold text-secondary mb-4">Browse by Category</h2>
             <p className="text-gray-600">Explore AI agents across different specializations</p>
           </div>
-          
+
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
             {categories.map((category) => (
               <Card 
@@ -127,7 +130,7 @@ export default function Landing() {
             <h2 className="text-3xl font-bold text-secondary mb-4">How It Works</h2>
             <p className="text-gray-600">Get started with AI agents in three simple steps</p>
           </div>
-          
+
           <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
             <div className="text-center">
               <div className="bg-primary text-white rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
@@ -138,7 +141,7 @@ export default function Landing() {
                 Discover thousands of AI agents across different categories and specializations
               </p>
             </div>
-            
+
             <div className="text-center">
               <div className="bg-primary text-white rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
                 2
@@ -148,7 +151,7 @@ export default function Landing() {
                 Select the perfect package for your needs and make a secure payment
               </p>
             </div>
-            
+
             <div className="text-center">
               <div className="bg-primary text-white rounded-full w-16 h-16 flex items-center justify-center mx-auto mb-4 text-2xl font-bold">
                 3
@@ -173,9 +176,9 @@ export default function Landing() {
             <Button 
               size="lg" 
               className="bg-primary hover:bg-green-600"
-              onClick={() => window.location.href = '/api/login'}
+              onClick={() => setIsAuthModalOpen(true)}
             >
-              Sign Up Now
+              Get Started Free
               <ArrowRight className="ml-2 h-5 w-5" />
             </Button>
             <Button 
@@ -190,6 +193,7 @@ export default function Landing() {
         </div>
       </section>
       </div>
+      <AuthModal open={isAuthModalOpen} onOpenChange={setIsAuthModalOpen} />
     </Layout>
   );
 }

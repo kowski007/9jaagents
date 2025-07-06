@@ -9,12 +9,12 @@ const isAdmin: RequestHandler = async (req, res, next) => {
   if (!userId) {
     return res.status(401).json({ message: "Unauthorized" });
   }
-  
+
   const user = await storage.getUser(userId);
   if (!user || user.role !== 'admin') {
     return res.status(403).json({ message: "Admin access required" });
   }
-  
+
   next();
 };
 import { 
@@ -25,6 +25,8 @@ import {
   insertMessageSchema,
   insertFavoriteSchema 
 } from "@shared/schema";
+import bcrypt from 'bcrypt';
+import { z } from 'zod';
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -42,6 +44,19 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Auth middleware
   await setupAuth(app);
 
+  // Email auth schemas
+  const loginSchema = z.object({
+    email: z.string().email(),
+    password: z.string().min(6),
+  });
+
+  const signupSchema = z.object({
+    firstName: z.string().min(1),
+    lastName: z.string().min(1),
+    email: z.string().email(),
+    password: z.string().min(6),
+  });
+
   // Auth routes
   app.get('/api/auth/user', isAuthenticated, async (req: AuthenticatedRequest, res) => {
     try {
@@ -51,6 +66,83 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error fetching user:", error);
       res.status(500).json({ message: "Failed to fetch user" });
+    }
+  });
+
+  // Email signup
+  app.post('/api/auth/signup', async (req, res) => {
+    try {
+      const { firstName, lastName, email, password } = signupSchema.parse(req.body);
+
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User already exists with this email" });
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(password, 10);
+
+      // Create user
+      const userId = `email_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      await storage.upsertUser({
+        id: userId,
+        email,
+        firstName,
+        lastName,
+        profileImageUrl: null,
+        hashedPassword,
+      });
+
+      res.status(201).json({ message: "User created successfully" });
+    } catch (error) {
+      console.error("Error creating user:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input data" });
+      }
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
+  // Email login
+  app.post('/api/auth/login', async (req, res) => {
+    try {
+      const { email, password } = loginSchema.parse(req.body);
+
+      // Get user by email
+      const user = await storage.getUserByEmail(email);
+      if (!user || !user.hashedPassword) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      // Verify password
+      const isValidPassword = await bcrypt.compare(password, user.hashedPassword);
+      if (!isValidPassword) {
+        return res.status(401).json({ message: "Invalid credentials" });
+      }
+
+      // Create session
+      req.login({ 
+        claims: { 
+          sub: user.id, 
+          email: user.email, 
+          first_name: user.firstName, 
+          last_name: user.lastName 
+        },
+        expires_at: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
+      }, (err) => {
+        if (err) {
+          console.error("Session error:", err);
+          return res.status(500).json({ message: "Failed to create session" });
+        }
+        res.json({ message: "Login successful", user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName } });
+      });
+    } catch (error) {
+      console.error("Error logging in user:", error);
+      if (error instanceof z.ZodError) {
+        return res.status(400).json({ message: "Invalid input data" });
+      }
+      res.status(500).json({ message: "Failed to login" });
     }
   });
 
@@ -113,16 +205,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const userId = req.user!.claims.sub;
-      
+
       const existing = await storage.getAgent(id);
       if (!existing) {
         return res.status(404).json({ message: "Agent not found" });
       }
-      
+
       if (existing.sellerId !== userId) {
         return res.status(403).json({ message: "Unauthorized" });
       }
-      
+
       const agentData = insertAgentSchema.partial().parse(req.body);
       const agent = await storage.updateAgent(id, agentData);
       res.json(agent);
@@ -136,16 +228,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const userId = req.user!.claims.sub;
-      
+
       const existing = await storage.getAgent(id);
       if (!existing) {
         return res.status(404).json({ message: "Agent not found" });
       }
-      
+
       if (existing.sellerId !== userId) {
         return res.status(403).json({ message: "Unauthorized" });
       }
-      
+
       await storage.deleteAgent(id);
       res.status(204).send();
     } catch (error) {
@@ -171,7 +263,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user!.claims.sub;
       const { type, status } = req.query;
-      
+
       const filters: any = { status: status as string };
       if (type === 'buyer') {
         filters.buyerId = userId;
@@ -184,7 +276,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const allOrders = [...buyerOrders, ...sellerOrders];
         return res.json(allOrders);
       }
-      
+
       const orders = await storage.getOrders(filters);
       res.json(orders);
     } catch (error) {
@@ -197,16 +289,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const userId = req.user!.claims.sub;
-      
+
       const order = await storage.getOrder(id);
       if (!order) {
         return res.status(404).json({ message: "Order not found" });
       }
-      
+
       if (order.buyerId !== userId && order.sellerId !== userId) {
         return res.status(403).json({ message: "Unauthorized" });
       }
-      
+
       res.json(order);
     } catch (error) {
       console.error("Error fetching order:", error);
@@ -221,7 +313,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         buyerId: userId,
       });
-      
+
       const order = await storage.createOrder(orderData);
       res.status(201).json(order);
     } catch (error) {
@@ -234,16 +326,16 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const userId = req.user!.claims.sub;
-      
+
       const existing = await storage.getOrder(id);
       if (!existing) {
         return res.status(404).json({ message: "Order not found" });
       }
-      
+
       if (existing.buyerId !== userId && existing.sellerId !== userId) {
         return res.status(403).json({ message: "Unauthorized" });
       }
-      
+
       const orderData = insertOrderSchema.partial().parse(req.body);
       const order = await storage.updateOrder(id, orderData);
       res.json(order);
@@ -272,7 +364,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         reviewerId: userId,
       });
-      
+
       const review = await storage.createReview(reviewData);
       res.status(201).json(review);
     } catch (error) {
@@ -300,7 +392,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         userId,
       });
-      
+
       const cartItem = await storage.addToCart(cartItemData);
       res.status(201).json(cartItem);
     } catch (error) {
@@ -313,14 +405,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const userId = req.user!.claims.sub;
-      
+
       const existing = await storage.getCartItems(userId);
       const cartItem = existing.find(item => item.id === id);
-      
+
       if (!cartItem) {
         return res.status(404).json({ message: "Cart item not found" });
       }
-      
+
       const cartItemData = insertCartItemSchema.partial().parse(req.body);
       const updatedItem = await storage.updateCartItem(id, cartItemData);
       res.json(updatedItem);
@@ -334,14 +426,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const id = parseInt(req.params.id);
       const userId = req.user!.claims.sub;
-      
+
       const existing = await storage.getCartItems(userId);
       const cartItem = existing.find(item => item.id === id);
-      
+
       if (!cartItem) {
         return res.status(404).json({ message: "Cart item not found" });
       }
-      
+
       await storage.removeFromCart(id);
       res.status(204).send();
     } catch (error) {
@@ -366,17 +458,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const userId = req.user!.claims.sub;
       const { orderId } = req.query;
-      
+
       const messages = await storage.getMessages({
         orderId: orderId ? parseInt(orderId as string) : undefined,
         senderId: userId,
       });
-      
+
       const receivedMessages = await storage.getMessages({
         orderId: orderId ? parseInt(orderId as string) : undefined,
         receiverId: userId,
       });
-      
+
       const allMessages = [...messages, ...receivedMessages];
       res.json(allMessages);
     } catch (error) {
@@ -392,7 +484,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         senderId: userId,
       });
-      
+
       const message = await storage.createMessage(messageData);
       res.status(201).json(message);
     } catch (error) {
@@ -420,7 +512,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         ...req.body,
         userId,
       });
-      
+
       const favorite = await storage.addToFavorites(favoriteData);
       res.status(201).json(favorite);
     } catch (error) {
@@ -433,7 +525,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const agentId = parseInt(req.params.agentId);
       const userId = req.user!.claims.sub;
-      
+
       await storage.removeFromFavorites(userId, agentId);
       res.status(204).send();
     } catch (error) {
@@ -446,7 +538,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.post('/api/paystack/webhook', async (req, res) => {
     try {
       const { event, data } = req.body;
-      
+
       if (event === 'charge.success') {
         // Update order status to paid
         const reference = data.reference;
@@ -454,7 +546,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         // This is a simplified implementation
         console.log('Payment successful:', reference);
       }
-      
+
       res.status(200).send();
     } catch (error) {
       console.error("Error handling webhook:", error);
@@ -477,11 +569,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const { id } = req.params;
       const { role } = req.body;
-      
+
       if (!['user', 'seller', 'admin'].includes(role)) {
         return res.status(400).json({ message: "Invalid role" });
       }
-      
+
       const user = await storage.updateUserRole(id, role);
       res.json(user);
     } catch (error) {

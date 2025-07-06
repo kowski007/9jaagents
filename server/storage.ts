@@ -32,11 +32,12 @@ export interface IStorage {
   updateUserRole(id: string, role: string): Promise<User>;
   getAllUsers(): Promise<User[]>;
   toggleUserActiveStatus(id: string): Promise<User>;
-  
+  getUserByEmail(email: string): Promise<User | undefined>;
+
   // Category operations
   getCategories(): Promise<Category[]>;
   createCategory(category: InsertCategory): Promise<Category>;
-  
+
   // Agent operations
   getAgents(filters?: { categoryId?: number; search?: string }): Promise<Agent[]>;
   getAgent(id: number): Promise<Agent | undefined>;
@@ -44,29 +45,29 @@ export interface IStorage {
   createAgent(agent: InsertAgent): Promise<Agent>;
   updateAgent(id: number, agent: Partial<InsertAgent>): Promise<Agent>;
   deleteAgent(id: number): Promise<void>;
-  
+
   // Order operations
   getOrders(filters?: { buyerId?: string; sellerId?: string; status?: string }): Promise<Order[]>;
   getOrder(id: number): Promise<Order | undefined>;
   createOrder(order: InsertOrder): Promise<Order>;
   updateOrder(id: number, order: Partial<InsertOrder>): Promise<Order>;
-  
+
   // Review operations
   getReviewsByAgent(agentId: number): Promise<Review[]>;
   createReview(review: InsertReview): Promise<Review>;
-  
+
   // Cart operations
   getCartItems(userId: string): Promise<CartItem[]>;
   addToCart(cartItem: InsertCartItem): Promise<CartItem>;
   updateCartItem(id: number, cartItem: Partial<InsertCartItem>): Promise<CartItem>;
   removeFromCart(id: number): Promise<void>;
   clearCart(userId: string): Promise<void>;
-  
+
   // Message operations
   getMessages(filters: { senderId?: string; receiverId?: string; orderId?: number }): Promise<Message[]>;
   createMessage(message: InsertMessage): Promise<Message>;
   markMessageAsRead(id: number): Promise<void>;
-  
+
   // Favorite operations
   getFavorites(userId: string): Promise<Favorite[]>;
   addToFavorites(favorite: InsertFavorite): Promise<Favorite>;
@@ -82,7 +83,7 @@ export class MemStorage implements IStorage {
   private cartItems: Map<number, CartItem> = new Map();
   private messages: Map<number, Message> = new Map();
   private favorites: Map<string, Favorite> = new Map();
-  
+
   private currentCategoryId = 1;
   private currentAgentId = 1;
   private currentOrderId = 1;
@@ -158,6 +159,15 @@ export class MemStorage implements IStorage {
     return updatedUser;
   }
 
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    for (const user of this.users.values()) {
+      if (user.email === email) {
+        return user;
+      }
+    }
+    return undefined;
+  }
+
   // Category operations
   async getCategories(): Promise<Category[]> {
     return Array.from(this.categories.values());
@@ -176,11 +186,11 @@ export class MemStorage implements IStorage {
   // Agent operations
   async getAgents(filters?: { categoryId?: number; search?: string }): Promise<Agent[]> {
     let agents = Array.from(this.agents.values()).filter(agent => agent.isActive);
-    
+
     if (filters?.categoryId) {
       agents = agents.filter(agent => agent.categoryId === filters.categoryId);
     }
-    
+
     if (filters?.search) {
       const search = filters.search.toLowerCase();
       agents = agents.filter(agent => 
@@ -189,7 +199,7 @@ export class MemStorage implements IStorage {
         agent.tags?.some(tag => tag.toLowerCase().includes(search))
       );
     }
-    
+
     return agents.sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0));
   }
 
@@ -209,7 +219,7 @@ export class MemStorage implements IStorage {
       updatedAt: new Date(),
     };
     this.agents.set(agent.id, agent);
-    
+
     // Update category agent count
     if (agent.categoryId) {
       const category = this.categories.get(agent.categoryId);
@@ -217,14 +227,14 @@ export class MemStorage implements IStorage {
         category.agentCount = (category.agentCount || 0) + 1;
       }
     }
-    
+
     return agent;
   }
 
   async updateAgent(id: number, agentData: Partial<InsertAgent>): Promise<Agent> {
     const existing = this.agents.get(id);
     if (!existing) throw new Error("Agent not found");
-    
+
     const agent: Agent = {
       ...existing,
       ...agentData,
@@ -238,7 +248,7 @@ export class MemStorage implements IStorage {
     const agent = this.agents.get(id);
     if (agent) {
       this.agents.delete(id);
-      
+
       // Update category agent count
       if (agent.categoryId) {
         const category = this.categories.get(agent.categoryId);
@@ -252,19 +262,19 @@ export class MemStorage implements IStorage {
   // Order operations
   async getOrders(filters?: { buyerId?: string; sellerId?: string; status?: string }): Promise<Order[]> {
     let orders = Array.from(this.orders.values());
-    
+
     if (filters?.buyerId) {
       orders = orders.filter(order => order.buyerId === filters.buyerId);
     }
-    
+
     if (filters?.sellerId) {
       orders = orders.filter(order => order.sellerId === filters.sellerId);
     }
-    
+
     if (filters?.status) {
       orders = orders.filter(order => order.status === filters.status);
     }
-    
+
     return orders.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
   }
 
@@ -280,20 +290,20 @@ export class MemStorage implements IStorage {
       updatedAt: new Date(),
     };
     this.orders.set(order.id, order);
-    
+
     // Update agent total orders
     const agent = this.agents.get(order.agentId);
     if (agent) {
       agent.totalOrders = (agent.totalOrders || 0) + 1;
     }
-    
+
     return order;
   }
 
   async updateOrder(id: number, orderData: Partial<InsertOrder>): Promise<Order> {
     const existing = this.orders.get(id);
     if (!existing) throw new Error("Order not found");
-    
+
     const order: Order = {
       ...existing,
       ...orderData,
@@ -317,7 +327,7 @@ export class MemStorage implements IStorage {
       createdAt: new Date(),
     };
     this.reviews.set(review.id, review);
-    
+
     // Update agent rating
     const agent = this.agents.get(review.agentId);
     if (agent) {
@@ -326,7 +336,7 @@ export class MemStorage implements IStorage {
       agent.avgRating = totalRating / reviews.length;
       agent.totalReviews = reviews.length;
     }
-    
+
     return review;
   }
 
@@ -344,12 +354,12 @@ export class MemStorage implements IStorage {
                item.agentId === cartItemData.agentId && 
                item.packageType === cartItemData.packageType
     );
-    
+
     if (existingItem) {
       existingItem.quantity = (existingItem.quantity || 1) + (cartItemData.quantity || 1);
       return existingItem;
     }
-    
+
     const cartItem: CartItem = {
       id: this.currentCartItemId++,
       ...cartItemData,
@@ -362,7 +372,7 @@ export class MemStorage implements IStorage {
   async updateCartItem(id: number, cartItemData: Partial<InsertCartItem>): Promise<CartItem> {
     const existing = this.cartItems.get(id);
     if (!existing) throw new Error("Cart item not found");
-    
+
     const cartItem: CartItem = {
       ...existing,
       ...cartItemData,
@@ -386,19 +396,19 @@ export class MemStorage implements IStorage {
   // Message operations
   async getMessages(filters: { senderId?: string; receiverId?: string; orderId?: number }): Promise<Message[]> {
     let messages = Array.from(this.messages.values());
-    
+
     if (filters.senderId) {
       messages = messages.filter(msg => msg.senderId === filters.senderId);
     }
-    
+
     if (filters.receiverId) {
       messages = messages.filter(msg => msg.receiverId === filters.receiverId);
     }
-    
+
     if (filters.orderId) {
       messages = messages.filter(msg => msg.orderId === filters.orderId);
     }
-    
+
     return messages.sort((a, b) => new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime());
   }
 
