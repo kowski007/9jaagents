@@ -12,9 +12,10 @@ import {
   DropdownMenuItem, 
   DropdownMenuTrigger 
 } from "@/components/ui/dropdown-menu";
-import { Search, ShoppingCart, Bell, Menu, Bot } from "lucide-react";
+import { Search, ShoppingCart, Bell, Menu, Bot, Plus } from "lucide-react";
 import CartSidebar from "./CartSidebar";
 import AuthModal from "./AuthModal";
+import { ThemeToggle } from "./ThemeToggle";
 
 export default function Header() {
   const [, setLocation] = useLocation();
@@ -71,8 +72,18 @@ export default function Header() {
                 <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               </form>
 
+              <ThemeToggle />
+
               {isAuthenticated ? (
                 <>
+                  <Button
+                    variant="outline"
+                    onClick={() => setLocation('/create-agent')}
+                    className="hidden md:flex items-center space-x-2"
+                  >
+                    <Plus className="h-4 w-4" />
+                    <span>List Your Agent</span>
+                  </Button>
                   <Button
                     variant="ghost"
                     size="sm"

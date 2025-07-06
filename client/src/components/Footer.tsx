@@ -5,7 +5,7 @@ import { Bot } from "lucide-react";
 export default function Footer() {
   return (
     <footer className="bg-gray-900 text-white mt-auto">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
           {/* Brand Section */}
           <div className="col-span-1 md:col-span-2">
@@ -74,7 +74,7 @@ export default function Footer() {
         </div>
 
         {/* Bottom Section */}
-        <div className="border-t border-gray-700 mt-8 pt-8 text-center">
+        <div className="border-t border-gray-700 mt-6 pt-6 text-center">
           <p className="text-gray-400">
             © 2025 AgentMarket. All rights reserved.
           </p>

@@ -27,6 +27,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
+import Layout from "@/components/Layout";
 
 export default function Dashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -96,7 +97,8 @@ export default function Dashboard() {
   ).filter(Boolean);
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <Layout>
+      <div className="min-h-screen bg-gray-50">
       <div className="flex">
         {/* Sidebar */}
         <div className="w-64 bg-white shadow-sm border-r min-h-screen">
@@ -617,6 +619,7 @@ export default function Dashboard() {
           </div>
         </div>
       </div>
-    </div>
+      </div>
+    </Layout>
   );
 }
