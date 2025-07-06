@@ -44,6 +44,8 @@ export default function ListAgent() {
     basicDeliveryDays: "",
     standardDeliveryDays: "",
     premiumDeliveryDays: "",
+    freeDescription: "",
+    freeDeliveryDays: "",
     tags: [] as string[],
     features: [] as string[],
     imageUrl: "",
@@ -119,6 +121,7 @@ export default function ListAgent() {
       basicDeliveryDays: parseInt(formData.basicDeliveryDays),
       standardDeliveryDays: formData.standardDeliveryDays ? parseInt(formData.standardDeliveryDays) : null,
       premiumDeliveryDays: formData.premiumDeliveryDays ? parseInt(formData.premiumDeliveryDays) : null,
+      freeDeliveryDays: formData.freeDeliveryDays ? parseInt(formData.freeDeliveryDays) : null,
     };
 
     createAgentMutation.mutate(agentData);
@@ -275,6 +278,74 @@ export default function ListAgent() {
             </CardContent>
           </Card>
 
+          {/* AI Agent Media & Links */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center">
+                <Bot className="h-5 w-5 mr-2" />
+                AI Agent Media & Links
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <Label htmlFor="imageUrl">Agent Image/Avatar URL</Label>
+                  <Input
+                    id="imageUrl"
+                    value={formData.imageUrl}
+                    onChange={(e) => setFormData(prev => ({ ...prev, imageUrl: e.target.value }))}
+                    placeholder="https://example.com/agent-avatar.jpg"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">Display image for your AI agent</p>
+                </div>
+
+                <div>
+                  <Label htmlFor="demoUrl">Live Demo URL</Label>
+                  <Input
+                    id="demoUrl"
+                    value={formData.demoUrl}
+                    onChange={(e) => setFormData(prev => ({ ...prev, demoUrl: e.target.value }))}
+                    placeholder="https://demo.example.com"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">Live preview/demo of your agent</p>
+                </div>
+
+                <div>
+                  <Label htmlFor="sourceCodeUrl">Source Code URL</Label>
+                  <Input
+                    id="sourceCodeUrl"
+                    value={formData.sourceCodeUrl}
+                    onChange={(e) => setFormData(prev => ({ ...prev, sourceCodeUrl: e.target.value }))}
+                    placeholder="https://github.com/username/repo"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">GitHub or code repository link</p>
+                </div>
+
+                <div>
+                  <Label htmlFor="documentationUrl">Documentation URL</Label>
+                  <Input
+                    id="documentationUrl"
+                    value={formData.documentationUrl}
+                    onChange={(e) => setFormData(prev => ({ ...prev, documentationUrl: e.target.value }))}
+                    placeholder="https://docs.example.com"
+                  />
+                  <p className="text-sm text-gray-500 mt-1">API docs or user guide</p>
+                </div>
+
+                <div className="md:col-span-2">
+                  <Label htmlFor="videoUrl">Demo Video URL</Label>
+                  <Input
+                    id="videoUrl"
+                    value={formData.videoUrl}
+                    onChange={(e) => setFormData(prev => ({ ...prev, videoUrl: e.target.value }))}
+                    placeholder="https://youtube.com/watch?v=..."
+                  />
+                  <p className="text-sm text-gray-500 mt-1">YouTube or demo video showcasing your agent</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Pricing Packages */}
           <Card>
             <CardHeader>
@@ -284,7 +355,47 @@ export default function ListAgent() {
               </CardTitle>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                {/* Free Package */}
+                <div className="border rounded-lg p-4">
+                  <div className="flex items-center mb-3">
+                    <Package className="h-5 w-5 text-gray-600 mr-2" />
+                    <h3 className="font-semibold">Free Package</h3>
+                  </div>
+                  <div className="space-y-3">
+                    <div>
+                      <Label htmlFor="freePrice">Price ($)</Label>
+                      <Input
+                        id="freePrice"
+                        type="number"
+                        value="0.00"
+                        disabled
+                        className="bg-gray-50"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="freeDeliveryDays">Delivery Days</Label>
+                      <Input
+                        id="freeDeliveryDays"
+                        type="number"
+                        value={formData.freeDeliveryDays}
+                        onChange={(e) => setFormData(prev => ({ ...prev, freeDeliveryDays: e.target.value }))}
+                        placeholder="1"
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="freeDescription">Description</Label>
+                      <Textarea
+                        id="freeDescription"
+                        value={formData.freeDescription}
+                        onChange={(e) => setFormData(prev => ({ ...prev, freeDescription: e.target.value }))}
+                        placeholder="What's included in the free package..."
+                        rows={3}
+                      />
+                    </div>
+                  </div>
+                </div>
+
                 {/* Basic Package */}
                 <div className="border rounded-lg p-4">
                   <div className="flex items-center mb-3">

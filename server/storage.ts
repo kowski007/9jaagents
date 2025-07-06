@@ -157,6 +157,30 @@ export class MemStorage implements IStorage {
         features: ["JavaScript", "Python", "React", "Node.js", "Debugging"]
       },
       {
+        title: "Simple Task Helper",
+        description: "Free AI assistant for simple daily tasks like email writing, basic calculations, and quick research. Perfect for getting started with AI assistance.",
+        categoryId: 1, // Writing
+        sellerId: "sample-seller-4",
+        basicPrice: "9.99",
+        standardPrice: "19.99",
+        premiumPrice: "29.99",
+        freeDescription: "Free basic task assistance: email templates, simple calculations, quick Q&A, basic research help",
+        freeDeliveryDays: 1,
+        basicDescription: "Enhanced task assistance with templates and priority support",
+        standardDescription: "Advanced automation and personalized responses with faster delivery",
+        premiumDescription: "Complete automation suite with custom integrations and dedicated support",
+        basicDeliveryDays: 2,
+        standardDeliveryDays: 3,
+        premiumDeliveryDays: 5,
+        imageUrl: "https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=400",
+        demoUrl: "https://demo-task-helper.example.com",
+        sourceCodeUrl: "https://github.com/taskhelper/demo",
+        documentationUrl: "https://docs.taskhelper.com",
+        videoUrl: "https://youtube.com/watch?v=task-helper-demo",
+        tags: ["AI", "Productivity", "Free", "Tasks"],
+        features: ["Email Writing", "Calculations", "Research", "Templates"]
+      },
+      {
         title: "Design Intelligence",
         description: "Creative AI agent for graphic design, UI/UX design, and visual content creation. Perfect for logos, banners, and complete brand identities.",
         categoryId: 3, // Design

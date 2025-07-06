@@ -27,7 +27,8 @@ export default function AgentDetailModal({ agent, seller, isOpen, onClose }: Age
   const { isAuthenticated } = useAuth();
   const { toast } = useToast();
   const queryClient = useQueryClient();
-  const [selectedPackage, setSelectedPackage] = useState<'basic' | 'standard' | 'premium'>('basic');
+  const isFreeAgent = agent.freeDescription && agent.freeDescription.trim().length > 0;
+  const [selectedPackage, setSelectedPackage] = useState<'free' | 'basic' | 'standard' | 'premium'>(isFreeAgent ? 'free' : 'basic');
 
   const { data: reviews = [] } = useQuery({
     queryKey: [`/api/agents/${agent.id}/reviews`],
@@ -93,6 +94,13 @@ export default function AgentDetailModal({ agent, seller, isOpen, onClose }: Age
   });
 
   const packages = [
+    ...(agent.freeDescription ? [{
+      type: 'free' as const,
+      name: 'Free',
+      price: '0',
+      description: agent.freeDescription,
+      deliveryDays: agent.freeDeliveryDays,
+    }] : []),
     {
       type: 'basic' as const,
       name: 'Basic',

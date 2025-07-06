@@ -62,6 +62,8 @@ export const agents = pgTable("agents", {
   basicPrice: decimal("basic_price", { precision: 10, scale: 2 }).notNull(),
   standardPrice: decimal("standard_price", { precision: 10, scale: 2 }),
   premiumPrice: decimal("premium_price", { precision: 10, scale: 2 }),
+  freeDescription: text("free_description"),
+  freeDeliveryDays: integer("free_delivery_days"),
   basicDescription: text("basic_description").notNull(),
   standardDescription: text("standard_description"),
   premiumDescription: text("premium_description"),

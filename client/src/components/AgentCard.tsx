@@ -22,6 +22,10 @@ export default function AgentCard({ agent, seller }: AgentCardProps) {
     // TODO: Add to favorites API call
   };
 
+  // Check if agent has a free package
+  const isFreeAgent = agent.freeDescription && agent.freeDescription.trim().length > 0;
+  const hasPreview = agent.demoUrl && agent.demoUrl.trim().length > 0;
+
   return (
     <>
       <Card className="bg-white hover:shadow-lg transition-shadow overflow-hidden border border-gray-200 cursor-pointer">
@@ -51,12 +55,12 @@ export default function AgentCard({ agent, seller }: AgentCardProps) {
                 {[...Array(5)].map((_, i) => (
                   <Star 
                     key={i} 
-                    className={`h-4 w-4 ${i < Math.floor(agent.avgRating || 0) ? 'fill-current' : ''}`} 
+                    className={`h-4 w-4 ${i < Math.floor(Number(agent.avgRating) || 0) ? 'fill-current' : ''}`} 
                   />
                 ))}
               </div>
               <span className="text-sm text-gray-600">
-                {agent.avgRating?.toFixed(1) || "0.0"} ({agent.totalReviews || 0})
+                {Number(agent.avgRating).toFixed(1) || "0.0"} ({agent.totalReviews || 0})
               </span>
             </div>
             <Badge variant="secondary" className="text-sm">
@@ -67,9 +71,17 @@ export default function AgentCard({ agent, seller }: AgentCardProps) {
           </div>
 
           <div className="flex items-center justify-between">
-            <span className="text-lg font-bold text-secondary">
-              From ${agent.basicPrice}
-            </span>
+            <div className="flex items-center space-x-2">
+              {isFreeAgent ? (
+                <Badge variant="outline" className="text-green-600 border-green-600">
+                  Free
+                </Badge>
+              ) : (
+                <span className="text-lg font-bold text-secondary">
+                  From ${agent.basicPrice}
+                </span>
+              )}
+            </div>
             <div className="flex items-center space-x-2">
               <Button
                 variant="ghost"
@@ -79,6 +91,20 @@ export default function AgentCard({ agent, seller }: AgentCardProps) {
               >
                 <Heart className={`h-4 w-4 ${isFavorited ? 'fill-red-500 text-red-500' : 'text-gray-400'}`} />
               </Button>
+              {!isFreeAgent && hasPreview && (
+                <Button 
+                  variant="outline"
+                  size="sm"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    if (agent.demoUrl) {
+                      window.open(agent.demoUrl, '_blank');
+                    }
+                  }}
+                >
+                  Preview
+                </Button>
+              )}
               <Button 
                 size="sm"
                 onClick={(e) => {
