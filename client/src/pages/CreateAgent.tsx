@@ -117,7 +117,7 @@ export default function ListAgent() {
           </div>
           <Button onClick={() => setLocation('/create-agent')}>
             <Plus className="mr-2 h-4 w-4" />
-            Create New Agent
+            List an Agent
           </Button>
         </div>
 
@@ -266,18 +266,18 @@ export default function ListAgent() {
               <div className="text-center py-12">
                 <Bot className="h-16 w-16 text-gray-300 mx-auto mb-4" />
                 <h3 className="text-lg font-medium text-gray-900 mb-2">
-                  {agents.length === 0 ? "No agents created yet" : "No agents match your filters"}
+                  {agents.length === 0 ? "No agents listed yet" : "No agents match your filters"}
                 </h3>
                 <p className="text-gray-500 mb-6">
                   {agents.length === 0 
-                    ? "Create your first AI agent to start selling your services"
+                    ? "List your first AI agent to start selling your services"
                     : "Try adjusting your search or filters"
                   }
                 </p>
                 {agents.length === 0 && (
                   <Button onClick={() => setLocation('/create-agent')}>
                     <Plus className="mr-2 h-4 w-4" />
-                    Create Your First Agent
+                    List Your First Agent
                   </Button>
                 )}
               </div>
