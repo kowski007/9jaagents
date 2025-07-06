@@ -18,18 +18,16 @@ function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
   return (
-    <Router>
-          <Switch>
-            <Route path="/" component={isAuthenticated ? Home : Landing} />
-            <Route path="/marketplace" component={Marketplace} />
-            <Route path="/dashboard" component={Dashboard} />
-            <Route path="/seller-dashboard" component={SellerDashboard} />
-            <Route path="/admin" component={AdminDashboard} />
-            <Route path="/create-agent" component={CreateAgent} />
-            <Route path="/checkout" component={Checkout} />
-            <Route component={NotFound} />
-          </Switch>
-        </Router>
+    <Switch>
+      <Route path="/" component={isAuthenticated ? Home : Landing} />
+      <Route path="/marketplace" component={Marketplace} />
+      <Route path="/dashboard" component={Dashboard} />
+      <Route path="/seller-dashboard" component={SellerDashboard} />
+      <Route path="/admin" component={AdminDashboard} />
+      <Route path="/create-agent" component={CreateAgent} />
+      <Route path="/checkout" component={Checkout} />
+      <Route component={NotFound} />
+    </Switch>
   );
 }
 
