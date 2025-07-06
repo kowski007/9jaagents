@@ -23,7 +23,9 @@ import {
   BarChart3,
   Award,
   Zap,
-  Target
+  Target,
+  Menu,
+  X
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -34,6 +36,7 @@ export default function Dashboard() {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("overview");
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -96,93 +99,168 @@ export default function Dashboard() {
     agents.find((agent: any) => agent.id === fav.agentId)
   ).filter(Boolean);
 
+  // Navigation component
+  const Navigation = ({ className = "" }: { className?: string }) => (
+    <div className={`p-6 ${className}`}>
+      <div className="flex items-center mb-8">
+        <Avatar className="h-12 w-12 mr-3">
+          <AvatarImage src={user?.profileImageUrl || ""} />
+          <AvatarFallback className="bg-primary text-white">
+            {user?.firstName?.[0] || user?.email?.[0] || "U"}
+          </AvatarFallback>
+        </Avatar>
+        <div>
+          <h3 className="font-semibold text-gray-900 dark:text-white">
+            {user?.firstName || user?.email?.split('@')[0] || "User"}
+          </h3>
+          <p className="text-sm text-gray-500 dark:text-gray-400">
+            {user?.buyerLevel === 'level3' ? 'Premium' :
+             user?.buyerLevel === 'level2' ? 'Pro' : 'Basic'} Member
+          </p>
+        </div>
+      </div>
+      
+      <nav className="space-y-1">
+        <Button 
+          variant={activeTab === "overview" ? "default" : "ghost"} 
+          className="w-full justify-start"
+          onClick={() => {
+            setActiveTab("overview");
+            setIsMobileMenuOpen(false);
+          }}
+        >
+          <BarChart3 className="mr-3 h-4 w-4" />
+          Overview
+        </Button>
+        <Button 
+          variant={activeTab === "orders" ? "default" : "ghost"} 
+          className="w-full justify-start"
+          onClick={() => {
+            setActiveTab("orders");
+            setIsMobileMenuOpen(false);
+          }}
+        >
+          <ShoppingCart className="mr-3 h-4 w-4" />
+          My Orders
+        </Button>
+        <Button 
+          variant={activeTab === "favorites" ? "default" : "ghost"} 
+          className="w-full justify-start"
+          onClick={() => {
+            setActiveTab("favorites");
+            setIsMobileMenuOpen(false);
+          }}
+        >
+          <Heart className="mr-3 h-4 w-4" />
+          Favorites
+        </Button>
+        <Button 
+          variant={activeTab === "messages" ? "default" : "ghost"} 
+          className="w-full justify-start"
+          onClick={() => {
+            setActiveTab("messages");
+            setIsMobileMenuOpen(false);
+          }}
+        >
+          <MessageSquare className="mr-3 h-4 w-4" />
+          Messages
+        </Button>
+        <Button 
+          variant={activeTab === "notifications" ? "default" : "ghost"} 
+          className="w-full justify-start"
+          onClick={() => {
+            setActiveTab("notifications");
+            setIsMobileMenuOpen(false);
+          }}
+        >
+          <Bell className="mr-3 h-4 w-4" />
+          Notifications
+        </Button>
+        <Button 
+          variant={activeTab === "settings" ? "default" : "ghost"} 
+          className="w-full justify-start"
+          onClick={() => {
+            setActiveTab("settings");
+            setIsMobileMenuOpen(false);
+          }}
+        >
+          <Settings className="mr-3 h-4 w-4" />
+          Settings
+        </Button>
+        <div className="pt-4 border-t">
+          <Button 
+            variant="outline" 
+            className="w-full justify-start"
+            onClick={() => {
+              setLocation('/seller-dashboard');
+              setIsMobileMenuOpen(false);
+            }}
+          >
+            <Star className="mr-3 h-4 w-4" />
+            Become a Seller
+          </Button>
+        </div>
+      </nav>
+    </div>
+  );
+
   return (
     <Layout>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
         <div className="flex flex-col lg:flex-row">
-          {/* Sidebar */}
-          <div className="w-full lg:w-64 bg-white dark:bg-gray-800 shadow-sm border-r dark:border-gray-700 lg:min-h-screen">
-          <div className="p-6">
-            <div className="flex items-center mb-8">
-              <Avatar className="h-12 w-12 mr-3">
-                <AvatarImage src={user?.profileImageUrl || ""} />
-                <AvatarFallback className="bg-primary text-white">
-                  {user?.firstName?.[0] || user?.email?.[0] || "U"}
-                </AvatarFallback>
-              </Avatar>
-              <div>
-                <h3 className="font-semibold text-gray-900 dark:text-white">
-                  {user?.firstName || user?.email?.split('@')[0] || "User"}
-                </h3>
-                <p className="text-sm text-gray-500 dark:text-gray-400">
-                  {user?.buyerLevel === 'level3' ? 'Premium' :
-                   user?.buyerLevel === 'level2' ? 'Pro' : 'Basic'} Member
-                </p>
+          {/* Mobile Header */}
+          <div className="lg:hidden bg-white dark:bg-gray-800 shadow-sm border-b dark:border-gray-700 p-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center">
+                <Avatar className="h-8 w-8 mr-3">
+                  <AvatarImage src={user?.profileImageUrl || ""} />
+                  <AvatarFallback className="bg-primary text-white">
+                    {user?.firstName?.[0] || user?.email?.[0] || "U"}
+                  </AvatarFallback>
+                </Avatar>
+                <div>
+                  <h3 className="font-semibold text-gray-900 dark:text-white text-sm">
+                    {user?.firstName || user?.email?.split('@')[0] || "User"}
+                  </h3>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">
+                    {user?.buyerLevel === 'level3' ? 'Premium' :
+                     user?.buyerLevel === 'level2' ? 'Pro' : 'Basic'} Member
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+              >
+                {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              </Button>
+            </div>
+          </div>
+
+          {/* Mobile Menu Overlay */}
+          {isMobileMenuOpen && (
+            <div className="fixed inset-0 z-50 lg:hidden">
+              <div className="absolute inset-0 bg-black bg-opacity-50" onClick={() => setIsMobileMenuOpen(false)} />
+              <div className="absolute top-0 left-0 h-full w-64 bg-white dark:bg-gray-800 shadow-xl">
+                <div className="flex justify-end p-4">
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => setIsMobileMenuOpen(false)}
+                  >
+                    <X className="h-5 w-5" />
+                  </Button>
+                </div>
+                <Navigation className="-mt-6" />
               </div>
             </div>
-            
-            <nav className="space-y-1">
-              <Button 
-                variant={activeTab === "overview" ? "default" : "ghost"} 
-                className="w-full justify-start"
-                onClick={() => setActiveTab("overview")}
-              >
-                <BarChart3 className="mr-3 h-4 w-4" />
-                Overview
-              </Button>
-              <Button 
-                variant={activeTab === "orders" ? "default" : "ghost"} 
-                className="w-full justify-start"
-                onClick={() => setActiveTab("orders")}
-              >
-                <ShoppingCart className="mr-3 h-4 w-4" />
-                My Orders
-              </Button>
-              <Button 
-                variant={activeTab === "favorites" ? "default" : "ghost"} 
-                className="w-full justify-start"
-                onClick={() => setActiveTab("favorites")}
-              >
-                <Heart className="mr-3 h-4 w-4" />
-                Favorites
-              </Button>
-              <Button 
-                variant={activeTab === "messages" ? "default" : "ghost"} 
-                className="w-full justify-start"
-                onClick={() => setActiveTab("messages")}
-              >
-                <MessageSquare className="mr-3 h-4 w-4" />
-                Messages
-              </Button>
-              <Button 
-                variant={activeTab === "notifications" ? "default" : "ghost"} 
-                className="w-full justify-start"
-                onClick={() => setActiveTab("notifications")}
-              >
-                <Bell className="mr-3 h-4 w-4" />
-                Notifications
-              </Button>
-              <Button 
-                variant={activeTab === "settings" ? "default" : "ghost"} 
-                className="w-full justify-start"
-                onClick={() => setActiveTab("settings")}
-              >
-                <Settings className="mr-3 h-4 w-4" />
-                Settings
-              </Button>
-              <div className="pt-4 border-t">
-                <Button 
-                  variant="outline" 
-                  className="w-full justify-start"
-                  onClick={() => setLocation('/seller-dashboard')}
-                >
-                  <Star className="mr-3 h-4 w-4" />
-                  Become a Seller
-                </Button>
-              </div>
-            </nav>
+          )}
+
+          {/* Desktop Sidebar */}
+          <div className="hidden lg:block lg:w-64 bg-white dark:bg-gray-800 shadow-sm border-r dark:border-gray-700 lg:min-h-screen">
+            <Navigation />
           </div>
-        </div>
 
         {/* Main Content */}
         <div className="flex-1">
