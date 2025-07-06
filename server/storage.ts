@@ -29,6 +29,9 @@ export interface IStorage {
   // User operations (required for Replit Auth)
   getUser(id: string): Promise<User | undefined>;
   upsertUser(user: UpsertUser): Promise<User>;
+  updateUserRole(id: string, role: string): Promise<User>;
+  getAllUsers(): Promise<User[]>;
+  toggleUserActiveStatus(id: string): Promise<User>;
   
   // Category operations
   getCategories(): Promise<Category[]>;
@@ -121,6 +124,38 @@ export class MemStorage implements IStorage {
     };
     this.users.set(userData.id, user);
     return user;
+  }
+
+  async updateUserRole(id: string, role: string): Promise<User> {
+    const user = this.users.get(id);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    const updatedUser: User = {
+      ...user,
+      role,
+      updatedAt: new Date(),
+    };
+    this.users.set(id, updatedUser);
+    return updatedUser;
+  }
+
+  async getAllUsers(): Promise<User[]> {
+    return Array.from(this.users.values());
+  }
+
+  async toggleUserActiveStatus(id: string): Promise<User> {
+    const user = this.users.get(id);
+    if (!user) {
+      throw new Error('User not found');
+    }
+    const updatedUser: User = {
+      ...user,
+      isActive: !user.isActive,
+      updatedAt: new Date(),
+    };
+    this.users.set(id, updatedUser);
+    return updatedUser;
   }
 
   // Category operations

@@ -11,6 +11,7 @@ import Dashboard from "@/pages/Dashboard";
 import SellerDashboard from "@/pages/SellerDashboard";
 import Checkout from "@/pages/Checkout";
 import CreateAgent from "@/pages/CreateAgent";
+import AdminDashboard from "@/pages/AdminDashboard";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -24,6 +25,7 @@ function Router() {
           <Route path="/" component={Home} />
           <Route path="/dashboard" component={Dashboard} />
           <Route path="/seller-dashboard" component={SellerDashboard} />
+          <Route path="/admin-dashboard" component={AdminDashboard} />
           <Route path="/checkout" component={Checkout} />
           <Route path="/create-agent" component={CreateAgent} />
         </>

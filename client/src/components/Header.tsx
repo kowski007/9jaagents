@@ -119,6 +119,11 @@ export default function Header() {
                       <DropdownMenuItem onClick={() => setLocation('/seller-dashboard')}>
                         Seller Dashboard
                       </DropdownMenuItem>
+                      {user?.role === 'admin' && (
+                        <DropdownMenuItem onClick={() => setLocation('/admin-dashboard')}>
+                          Admin Dashboard
+                        </DropdownMenuItem>
+                      )}
                       <DropdownMenuItem onClick={() => setLocation('/profile')}>
                         Profile Settings
                       </DropdownMenuItem>

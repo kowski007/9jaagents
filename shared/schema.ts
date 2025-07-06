@@ -32,6 +32,8 @@ export const users = pgTable("users", {
   firstName: varchar("first_name"),
   lastName: varchar("last_name"),
   profileImageUrl: varchar("profile_image_url"),
+  role: varchar("role").default("user").notNull(), // user, seller, admin
+  isActive: boolean("is_active").default(true).notNull(),
   sellerLevel: varchar("seller_level").default("none"), // none, level1, level2, top_rated
   buyerLevel: varchar("buyer_level").default("level1"), // level1, level2, level3
   totalEarnings: decimal("total_earnings", { precision: 10, scale: 2 }).default("0"),
