@@ -43,18 +43,18 @@ export default function Header() {
                 <Bot className="h-8 w-8 text-primary" />
                 <span className="text-xl font-bold text-secondary">AgentMarket</span>
               </Link>
-              
-              <nav className="hidden md:flex space-x-6">
-                <Link href="/" className="text-gray-700 hover:text-primary transition-colors">
-                  Browse Agents
-                </Link>
-                <Link href="/categories" className="text-gray-700 hover:text-primary transition-colors">
-                  Categories
-                </Link>
-                <Link href="/how-it-works" className="text-gray-700 hover:text-primary transition-colors">
-                  How it Works
-                </Link>
-              </nav>
+
+              <div className="hidden md:flex items-center space-x-8">
+              <Link href="/" className="text-gray-600 hover:text-primary transition-colors">
+                Home
+              </Link>
+              <Link href="/marketplace" className="text-gray-600 hover:text-primary transition-colors">
+                Marketplace
+              </Link>
+              <Link href="/categories" className="text-gray-600 hover:text-primary transition-colors">
+                Categories
+              </Link>
+            </div>
             </div>
 
             <div className="flex items-center space-x-4">
