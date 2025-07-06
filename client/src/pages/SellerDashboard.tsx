@@ -234,17 +234,17 @@ export default function SellerDashboard() {
                   <CardTitle>My AI Agents</CardTitle>
                   <Button onClick={() => setLocation('/create-agent')}>
                     <Plus className="mr-2 h-4 w-4" />
-                    Create New Agent
+                    List an Agent
                   </Button>
                 </div>
               </CardHeader>
               <CardContent>
                 {sellerAgents.length === 0 ? (
                   <div className="text-center py-8">
-                    <p className="text-gray-500 mb-4">No agents created yet</p>
+                    <p className="text-gray-500 mb-4">No agents listed yet</p>
                     <Button onClick={() => setLocation('/create-agent')}>
                       <Plus className="mr-2 h-4 w-4" />
-                      Create Your First Agent
+                      List Your First Agent
                     </Button>
                   </div>
                 ) : (
