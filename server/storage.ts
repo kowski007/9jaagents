@@ -109,6 +109,140 @@ export class MemStorage implements IStorage {
     defaultCategories.forEach(category => {
       this.createCategory(category);
     });
+
+    // Initialize sample agents
+    const sampleAgents: InsertAgent[] = [
+      {
+        name: "AI Content Writer Pro",
+        description: "Professional AI agent for creating high-quality blog posts, articles, and marketing copy. Specializes in SEO-optimized content across various industries.",
+        categoryId: 1, // Writing
+        sellerId: "sample-seller-1",
+        skills: ["Content Writing", "SEO", "Copywriting", "Blog Posts"],
+        basicPrice: 29.99,
+        standardPrice: 49.99,
+        premiumPrice: 79.99,
+        basicFeatures: ["Up to 1000 words", "Basic SEO optimization", "1 revision"],
+        standardFeatures: ["Up to 2500 words", "Advanced SEO optimization", "3 revisions", "Keyword research"],
+        premiumFeatures: ["Up to 5000 words", "Premium SEO optimization", "Unlimited revisions", "Keyword research", "Content strategy"],
+        imageUrl: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400",
+        status: "active",
+        rating: 4.8,
+        responseTime: "2 hours",
+        completionRate: 98,
+        languages: ["English", "Spanish"],
+        totalOrders: 127,
+        tags: ["AI", "Writing", "SEO", "Content"]
+      },
+      {
+        name: "Code Assistant Expert",
+        description: "Advanced AI coding assistant that helps with full-stack development, debugging, and code optimization. Supports multiple programming languages.",
+        categoryId: 2, // Coding
+        sellerId: "sample-seller-2", 
+        skills: ["JavaScript", "Python", "React", "Node.js", "Debugging"],
+        basicPrice: 39.99,
+        standardPrice: 69.99,
+        premiumPrice: 99.99,
+        basicFeatures: ["Code review", "Basic debugging", "1 hour consultation"],
+        standardFeatures: ["Full-stack development", "Advanced debugging", "Code optimization", "3 hours consultation"],
+        premiumFeatures: ["Complete project development", "Architecture design", "Performance optimization", "Unlimited consultation", "Documentation"],
+        imageUrl: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400",
+        status: "active",
+        rating: 4.9,
+        responseTime: "1 hour",
+        completionRate: 95,
+        languages: ["English"],
+        totalOrders: 89,
+        tags: ["AI", "Programming", "Full-Stack", "Debugging"]
+      },
+      {
+        name: "Design Intelligence",
+        description: "Creative AI agent for graphic design, UI/UX design, and visual content creation. Perfect for logos, banners, and complete brand identities.",
+        categoryId: 3, // Design
+        sellerId: "sample-seller-3",
+        skills: ["Logo Design", "UI/UX", "Branding", "Social Media Graphics"],
+        basicPrice: 34.99,
+        standardPrice: 59.99,
+        premiumPrice: 89.99,
+        basicFeatures: ["Logo design", "2 concepts", "2 revisions"],
+        standardFeatures: ["Complete branding package", "5 concepts", "5 revisions", "Social media kit"],
+        premiumFeatures: ["Full brand identity", "Unlimited concepts", "Unlimited revisions", "Brand guidelines", "Marketing materials"],
+        imageUrl: "https://images.unsplash.com/photo-1541462608143-67571c6738dd?w=400",
+        status: "active",
+        rating: 4.7,
+        responseTime: "4 hours",
+        completionRate: 92,
+        languages: ["English", "French"],
+        totalOrders: 156,
+        tags: ["AI", "Design", "Branding", "Graphics"]
+      },
+      {
+        name: "Data Analytics AI",
+        description: "Powerful AI agent for data analysis, visualization, and business intelligence. Transforms raw data into actionable insights and comprehensive reports.",
+        categoryId: 4, // Analytics
+        sellerId: "sample-seller-4",
+        skills: ["Data Analysis", "Visualization", "Business Intelligence", "Reporting"],
+        basicPrice: 44.99,
+        standardPrice: 74.99,
+        premiumPrice: 119.99,
+        basicFeatures: ["Basic data analysis", "Simple charts", "PDF report"],
+        standardFeatures: ["Advanced analytics", "Interactive dashboards", "Multiple formats", "Trend analysis"],
+        premiumFeatures: ["Comprehensive BI solution", "Real-time dashboards", "Predictive analytics", "Custom integrations", "Ongoing support"],
+        imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400",
+        status: "active", 
+        rating: 4.6,
+        responseTime: "6 hours",
+        completionRate: 94,
+        languages: ["English"],
+        totalOrders: 73,
+        tags: ["AI", "Analytics", "Data", "Business Intelligence"]
+      },
+      {
+        name: "Global Translator Pro",
+        description: "Multilingual AI agent specializing in accurate translations and localization services. Supports 50+ languages with cultural context awareness.",
+        categoryId: 5, // Translation
+        sellerId: "sample-seller-5",
+        skills: ["Translation", "Localization", "Cultural Adaptation", "Technical Translation"],
+        basicPrice: 24.99,
+        standardPrice: 44.99,
+        premiumPrice: 64.99,
+        basicFeatures: ["Up to 500 words", "1 language pair", "Basic translation"],
+        standardFeatures: ["Up to 2000 words", "3 language pairs", "Cultural adaptation", "Proofreading"],
+        premiumFeatures: ["Up to 5000 words", "Unlimited language pairs", "Localization", "Cultural consulting", "Rush delivery"],
+        imageUrl: "https://images.unsplash.com/photo-1543269664-56d93c1b41a6?w=400",
+        status: "active",
+        rating: 4.8,
+        responseTime: "3 hours",
+        completionRate: 96,
+        languages: ["English", "Spanish", "French", "German", "Chinese"],
+        totalOrders: 201,
+        tags: ["AI", "Translation", "Multilingual", "Localization"]
+      },
+      {
+        name: "Workflow Automation Master",
+        description: "Intelligent automation agent that streamlines business processes and workflows. Integrates with popular tools and platforms for maximum efficiency.",
+        categoryId: 6, // Automation
+        sellerId: "sample-seller-6",
+        skills: ["Process Automation", "Workflow Design", "Integration", "Optimization"],
+        basicPrice: 54.99,
+        standardPrice: 94.99,
+        premiumPrice: 149.99,
+        basicFeatures: ["Simple workflow", "2 integrations", "Basic setup"],
+        standardFeatures: ["Complex workflows", "5 integrations", "Custom triggers", "Monitoring"],
+        premiumFeatures: ["Enterprise automation", "Unlimited integrations", "AI optimization", "24/7 monitoring", "Maintenance"],
+        imageUrl: "https://images.unsplash.com/photo-1518186233392-c232efbf2373?w=400",
+        status: "active",
+        rating: 4.9,
+        responseTime: "12 hours",
+        completionRate: 97,
+        languages: ["English"],
+        totalOrders: 45,
+        tags: ["AI", "Automation", "Workflow", "Integration"]
+      }
+    ];
+
+    sampleAgents.forEach(agent => {
+      this.createAgent(agent);
+    });
   }
 
   // User operations

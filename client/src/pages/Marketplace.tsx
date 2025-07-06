@@ -84,7 +84,7 @@ export default function Marketplace() {
 
   return (
     <Layout>
-      <div className="bg-white">
+      <div className="bg-white dark:bg-gray-900">
         {/* Header Section */}
         <div className="bg-gradient-to-r from-primary to-green-600 text-white">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">

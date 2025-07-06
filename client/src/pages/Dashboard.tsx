@@ -98,10 +98,10 @@ export default function Dashboard() {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-gray-50">
-      <div className="flex">
-        {/* Sidebar */}
-        <div className="w-64 bg-white shadow-sm border-r min-h-screen">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
+        <div className="flex flex-col lg:flex-row">
+          {/* Sidebar */}
+          <div className="w-full lg:w-64 bg-white dark:bg-gray-800 shadow-sm border-r dark:border-gray-700 lg:min-h-screen">
           <div className="p-6">
             <div className="flex items-center mb-8">
               <Avatar className="h-12 w-12 mr-3">
@@ -111,10 +111,10 @@ export default function Dashboard() {
                 </AvatarFallback>
               </Avatar>
               <div>
-                <h3 className="font-semibold text-gray-900">
+                <h3 className="font-semibold text-gray-900 dark:text-white">
                   {user?.firstName || user?.email?.split('@')[0] || "User"}
                 </h3>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-500 dark:text-gray-400">
                   {user?.buyerLevel === 'level3' ? 'Premium' :
                    user?.buyerLevel === 'level2' ? 'Pro' : 'Basic'} Member
                 </p>
@@ -186,73 +186,73 @@ export default function Dashboard() {
 
         {/* Main Content */}
         <div className="flex-1">
-          <div className="p-8">
+          <div className="p-4 sm:p-6 lg:p-8">
             {/* Header */}
             <div className="mb-8">
-              <h1 className="text-2xl font-bold text-gray-900">Dashboard</h1>
-              <p className="text-gray-600">Welcome back, {user?.firstName || "User"}!</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-white">Dashboard</h1>
+              <p className="text-gray-600 dark:text-gray-400">Welcome back, {(user as any)?.firstName || "User"}!</p>
             </div>
 
             {/* Overview Tab */}
             {activeTab === "overview" && (
               <div className="space-y-8">
                 {/* Stats Cards */}
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                  <Card>
-                    <CardContent className="p-6">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+                  <Card className="border-blue-200 dark:border-blue-800">
+                    <CardContent className="p-4 sm:p-6">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm text-blue-600 font-medium">Active Orders</p>
-                          <p className="text-2xl font-bold text-blue-700">{activeOrders.length}</p>
-                          <p className="text-xs text-gray-500">In progress</p>
+                          <p className="text-sm text-blue-600 dark:text-blue-400 font-medium">Active Orders</p>
+                          <p className="text-2xl font-bold text-blue-700 dark:text-blue-300">{activeOrders.length}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">In progress</p>
                         </div>
-                        <div className="bg-blue-100 p-3 rounded-full">
-                          <ShoppingCart className="h-6 w-6 text-blue-600" />
+                        <div className="bg-blue-100 dark:bg-blue-900 p-3 rounded-full">
+                          <ShoppingCart className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                         </div>
                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card>
-                    <CardContent className="p-6">
+                  <Card className="border-green-200 dark:border-green-800">
+                    <CardContent className="p-4 sm:p-6">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm text-green-600 font-medium">Completed</p>
-                          <p className="text-2xl font-bold text-green-700">{completedOrders.length}</p>
-                          <p className="text-xs text-gray-500">Total orders</p>
+                          <p className="text-sm text-green-600 dark:text-green-400 font-medium">Completed</p>
+                          <p className="text-2xl font-bold text-green-700 dark:text-green-300">{completedOrders.length}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Total orders</p>
                         </div>
-                        <div className="bg-green-100 p-3 rounded-full">
-                          <CheckCircle className="h-6 w-6 text-green-600" />
+                        <div className="bg-green-100 dark:bg-green-900 p-3 rounded-full">
+                          <CheckCircle className="h-6 w-6 text-green-600 dark:text-green-400" />
                         </div>
                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card>
-                    <CardContent className="p-6">
+                  <Card className="border-purple-200 dark:border-purple-800">
+                    <CardContent className="p-4 sm:p-6">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm text-purple-600 font-medium">Total Spent</p>
-                          <p className="text-2xl font-bold text-purple-700">${totalSpent.toFixed(2)}</p>
-                          <p className="text-xs text-gray-500">All time</p>
+                          <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">Total Spent</p>
+                          <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">${totalSpent.toFixed(2)}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">All time</p>
                         </div>
-                        <div className="bg-purple-100 p-3 rounded-full">
-                          <DollarSign className="h-6 w-6 text-purple-600" />
+                        <div className="bg-purple-100 dark:bg-purple-900 p-3 rounded-full">
+                          <DollarSign className="h-6 w-6 text-purple-600 dark:text-purple-400" />
                         </div>
                       </div>
                     </CardContent>
                   </Card>
 
-                  <Card>
-                    <CardContent className="p-6">
+                  <Card className="border-orange-200 dark:border-orange-800">
+                    <CardContent className="p-4 sm:p-6">
                       <div className="flex items-center justify-between">
                         <div>
-                          <p className="text-sm text-orange-600 font-medium">Favorites</p>
-                          <p className="text-2xl font-bold text-orange-700">{favorites.length}</p>
-                          <p className="text-xs text-gray-500">Saved agents</p>
+                          <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">Favorites</p>
+                          <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">{(favorites as any[]).length}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">Saved agents</p>
                         </div>
-                        <div className="bg-orange-100 p-3 rounded-full">
-                          <Heart className="h-6 w-6 text-orange-600" />
+                        <div className="bg-orange-100 dark:bg-orange-900 p-3 rounded-full">
+                          <Heart className="h-6 w-6 text-orange-600 dark:text-orange-400" />
                         </div>
                       </div>
                     </CardContent>
@@ -260,13 +260,13 @@ export default function Dashboard() {
                 </div>
 
                 {/* Quick Actions */}
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
                   <Card>
                     <CardHeader>
                       <CardTitle className="text-lg">Quick Actions</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-3">
-                      <Button variant="outline" className="w-full justify-start" onClick={() => setLocation('/')}>
+                      <Button variant="outline" className="w-full justify-start" onClick={() => setLocation('/marketplace')}>
                         <Package className="mr-2 h-4 w-4" />
                         Browse Agents
                       </Button>

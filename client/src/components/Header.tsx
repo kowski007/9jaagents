@@ -38,7 +38,7 @@ export default function Header() {
 
   return (
     <>
-      <header className="bg-white shadow-sm border-b sticky top-0 z-50">
+      <header className="bg-white dark:bg-gray-900 shadow-sm border-b dark:border-gray-800 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center space-x-8">
@@ -48,13 +48,13 @@ export default function Header() {
               </Link>
 
               <div className="hidden md:flex items-center space-x-8">
-              <Link href="/" className="text-gray-600 hover:text-primary transition-colors">
+              <Link href="/" className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">
                 Home
               </Link>
-              <Link href="/marketplace" className="text-gray-600 hover:text-primary transition-colors">
+              <Link href="/marketplace" className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">
                 Marketplace
               </Link>
-              <Link href="/categories" className="text-gray-600 hover:text-primary transition-colors">
+              <Link href="/categories" className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">
                 Categories
               </Link>
             </div>
