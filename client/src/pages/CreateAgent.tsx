@@ -112,9 +112,6 @@ export default function ListAgent() {
     const agentData = {
       ...formData,
       categoryId: parseInt(formData.categoryId),
-      basicPrice: parseFloat(formData.basicPrice),
-      standardPrice: formData.standardPrice ? parseFloat(formData.standardPrice) : null,
-      premiumPrice: formData.premiumPrice ? parseFloat(formData.premiumPrice) : null,
       basicDeliveryDays: parseInt(formData.basicDeliveryDays),
       standardDeliveryDays: formData.standardDeliveryDays ? parseInt(formData.standardDeliveryDays) : null,
       premiumDeliveryDays: formData.premiumDeliveryDays ? parseInt(formData.premiumDeliveryDays) : null,
