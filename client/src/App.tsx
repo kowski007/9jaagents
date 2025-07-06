@@ -25,7 +25,7 @@ function Router() {
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/seller-dashboard" component={SellerDashboard} />
       <Route path="/admin" component={AdminDashboard} />
-      <Route path="/create-agent" component={ListAgent} />
+      <Route path="/list-agent" component={ListAgent} />
       <Route path="/checkout" component={Checkout} />
       <Route component={NotFound} />
     </Switch>
