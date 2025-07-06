@@ -13,7 +13,11 @@ import {
   Zap, 
   Users,
   TrendingUp,
-  Search
+  Search,
+  PenTool,
+  Code,
+  Palette,
+  Languages
 } from "lucide-react";
 import Layout from "@/components/Layout";
 import AuthModal from "@/components/AuthModal";
