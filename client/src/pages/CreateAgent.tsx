@@ -46,6 +46,11 @@ export default function ListAgent() {
     premiumDeliveryDays: "",
     tags: [] as string[],
     features: [] as string[],
+    imageUrl: "",
+    demoUrl: "",
+    sourceCodeUrl: "",
+    documentationUrl: "",
+    videoUrl: "",
     isActive: true,
   });
 

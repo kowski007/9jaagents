@@ -70,6 +70,11 @@ export const agents = pgTable("agents", {
   premiumDeliveryDays: integer("premium_delivery_days"),
   tags: text("tags").array(),
   features: text("features").array(),
+  imageUrl: text("image_url"), // Agent avatar/thumbnail
+  demoUrl: text("demo_url"), // Live preview/demo link
+  sourceCodeUrl: text("source_code_url"), // GitHub/code repository
+  documentationUrl: text("documentation_url"), // Documentation link
+  videoUrl: text("video_url"), // Demo video
   isActive: boolean("is_active").default(true),
   totalOrders: integer("total_orders").default(0),
   avgRating: decimal("avg_rating", { precision: 3, scale: 2 }).default("0"),
