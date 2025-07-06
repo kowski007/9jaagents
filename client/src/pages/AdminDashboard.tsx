@@ -32,6 +32,7 @@ import {
   Trash2
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 interface DashboardStats {
   totalUsers: number;
@@ -46,6 +47,7 @@ interface DashboardStats {
 
 export default function AdminDashboard() {
   const { user } = useAuth();
+  const isMobile = useIsMobile();
 
   // Check if user is admin
   if (!user || (user as any).role !== "admin") {

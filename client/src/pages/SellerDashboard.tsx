@@ -17,19 +17,24 @@ import {
   Bot,
   Eye,
   Pause,
-  Play
+  Play,
+  Home,
+  User,
+  Activity
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
 import Layout from "@/components/Layout";
+import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function SellerDashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
+  const isMobile = useIsMobile();
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -119,14 +124,14 @@ export default function SellerDashboard() {
   );
 
   return (
-    <Layout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="grid grid-cols-1 lg:grid-cols-4 gap-8">
-          {/* Sidebar */}
-          <div className="lg:col-span-1">
-            <Card>
-              <CardContent className="p-6">
-                <div className="flex items-center mb-6">
+    <Layout showFooter={false}>
+      <div className="min-h-screen bg-gray-50">
+        <div className={`flex ${isMobile ? 'flex-col' : ''}`}>
+          {/* Desktop Sidebar */}
+          {!isMobile && (
+            <div className="w-64 bg-white shadow-lg">
+              <div className="p-6">
+                <div className="flex items-center space-x-3 mb-8">
                   <Avatar className="h-16 w-16 mr-4">
                     <AvatarImage src={user?.profileImageUrl || ""} />
                     <AvatarFallback>
@@ -143,39 +148,65 @@ export default function SellerDashboard() {
                     </p>
                   </div>
                 </div>
-                
-                <nav className="space-y-2">
-                  <Button variant="default" className="w-full justify-start">
-                    <TrendingUp className="mr-3 h-4 w-4" />
-                    Dashboard
-                  </Button>
-                  <Button variant="ghost" className="w-full justify-start">
-                    <Bot className="mr-3 h-4 w-4" />
-                    My Agents
-                  </Button>
-                  <Button 
-                    variant="ghost" 
-                    className="w-full justify-start"
-                    onClick={() => setLocation('/create-agent')}
-                  >
-                    <Plus className="mr-3 h-4 w-4" />
-                    Create Agent
-                  </Button>
-                  <Button variant="ghost" className="w-full justify-start">
-                    <ShoppingCart className="mr-3 h-4 w-4" />
-                    Orders
-                  </Button>
-                  <Button variant="ghost" className="w-full justify-start">
-                    <BarChart3 className="mr-3 h-4 w-4" />
-                    Analytics
-                  </Button>
-                </nav>
-              </CardContent>
-            </Card>
-          </div>
+              </div>
+
+              <Card className="mx-4 mb-4">
+                <CardContent className="p-4">
+                  <nav className="space-y-2">
+                    <Button variant="ghost" className="w-full justify-start">
+                      <Bot className="mr-3 h-4 w-4" />
+                      My Agents
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start"
+                      onClick={() => setLocation('/create-agent')}
+                    >
+                      <Plus className="mr-3 h-4 w-4" />
+                      Create Agent
+                    </Button>
+                    <Button variant="ghost" className="w-full justify-start">
+                      <ShoppingCart className="mr-3 h-4 w-4" />
+                      Orders
+                    </Button>
+                    <Button variant="ghost" className="w-full justify-start">
+                      <BarChart3 className="mr-3 h-4 w-4" />
+                      Analytics
+                    </Button>
+                  </nav>
+                </CardContent>
+              </Card>
+            </div>
+          )}
+
+          {/* Mobile Header */}
+          {isMobile && (
+            <div className="bg-white shadow-sm p-4 flex items-center space-x-3">
+              <Avatar className="h-16 w-16 mr-4">
+                <AvatarImage src={user?.profileImageUrl || ""} />
+                <AvatarFallback>
+                  {user?.firstName?.[0] || user?.email?.[0] || "U"}
+                </AvatarFallback>
+              </Avatar>
+              <div>
+                <h3 className="font-semibold text-secondary">
+                  {user?.firstName || user?.email?.split('@')[0] || "User"}
+                </h3>
+                <p className="text-sm text-gray-600">
+                  {user?.sellerLevel === 'top_rated' ? 'Top Rated Seller' :
+                   user?.sellerLevel === 'level2' ? 'Level 2 Seller' : 'Level 1 Seller'}
+                </p>
+              </div>
+            </div>
+          )}
 
           {/* Main Content */}
-          <div className="lg:col-span-3">
+          <div className={`flex-1 ${isMobile ? 'p-4 pb-20' : 'p-8'}`}>
+            <div className="mb-8">
+              <h1 className={`${isMobile ? 'text-2xl' : 'text-3xl'} font-bold text-gray-900 mb-2`}>Dashboard</h1>
+              <p className="text-gray-600">Manage your AI agents and track your performance</p>
+            </div>
+
             {/* Stats Cards */}
             <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6">
               <Card>
@@ -343,6 +374,55 @@ export default function SellerDashboard() {
             </Card>
           </div>
         </div>
+
+        {/* Mobile Bottom Navigation */}
+        {isMobile && (
+          <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
+            <div className="flex justify-around py-2">
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="flex flex-col items-center py-2 px-3"
+              >
+                <Home className="h-5 w-5 mb-1" />
+                <span className="text-xs">Dashboard</span>
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="flex flex-col items-center py-2 px-3"
+              >
+                <Bot className="h-5 w-5 mb-1" />
+                <span className="text-xs">My Agents</span>
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="flex flex-col items-center py-2 px-3"
+                onClick={() => setLocation('/create-agent')}
+              >
+                <Plus className="h-5 w-5 mb-1" />
+                <span className="text-xs">Create</span>
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="flex flex-col items-center py-2 px-3"
+              >
+                <ShoppingCart className="h-5 w-5 mb-1" />
+                <span className="text-xs">Orders</span>
+              </Button>
+              <Button 
+                variant="ghost" 
+                size="sm" 
+                className="flex flex-col items-center py-2 px-3"
+              >
+                <BarChart3 className="h-5 w-5 mb-1" />
+                <span className="text-xs">Analytics</span>
+              </Button>
+            </div>
+          </div>
+        )}
       </div>
     </Layout>
   );

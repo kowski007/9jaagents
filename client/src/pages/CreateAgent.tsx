@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -97,7 +96,7 @@ export default function ListAgent() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
+
     if (!formData.title || !formData.description || !formData.categoryId || !formData.basicPrice) {
       toast({
         title: "Validation Error",
@@ -108,7 +107,7 @@ export default function ListAgent() {
     }
 
     setIsSubmitting(true);
-    
+
     const agentData = {
       ...formData,
       categoryId: parseInt(formData.categoryId),
@@ -158,8 +157,9 @@ export default function ListAgent() {
   }
 
   return (
-    <Layout>
-      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <Layout showFooter={false}>
+      <div className="min-h-screen bg-gray-50 p-4 md:p-8 pb-20 md:pb-8">
+        <div className="max-w-4xl mx-auto">
         {/* Header */}
         <div className="flex items-center mb-8">
           <Bot className="h-8 w-8 text-primary mr-3" />
@@ -445,6 +445,7 @@ export default function ListAgent() {
             </div>
           </div>
         </form>
+      </div>
       </div>
     </Layout>
   );
