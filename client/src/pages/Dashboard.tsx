@@ -94,7 +94,7 @@ export default function Dashboard() {
   const completedOrders = orders?.filter((order: any) => order.status === 'completed') || [];
   const totalSpent = completedOrders.reduce((sum: number, order: any) => sum + parseFloat(order.amount || 0), 0);
   const agentsPurchased = completedOrders.length;
-  const favoriteAgents = favorites?.length || 0;
+  const favoriteAgentsCount = favorites?.length || 0;
   const recentActivity = orders?.length || 0;
 
   const favoriteAgents = favorites.map((fav: any) => 
@@ -366,7 +366,7 @@ export default function Dashboard() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">Favorites</p>
-                          <p className="text-2xl font-bold text-gray-900 dark:text-white">{agentsPurchased}</p>
+                          <p className="text-2xl font-bold text-gray-900 dark:text-white">{favoriteAgentsCount}</p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">Saved agents</p>
                         </div>
                         <div className="bg-orange-100 dark:bg-orange-900 p-3 rounded-full">
