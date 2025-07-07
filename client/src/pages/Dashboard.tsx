@@ -28,13 +28,13 @@ import {
   X
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
+import { useToastEnhanced } from "@/hooks/useToastEnhanced";
 import Layout from "@/components/Layout";
 import BecomeSellerModal from "@/pages/BecomeSellerModal";
 
 export default function Dashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const { toast } = useToast();
+  const { showError, showSuccess } = useToastEnhanced();
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("overview");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -43,17 +43,13 @@ export default function Dashboard() {
   // Redirect if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
+      showError("Unauthorized", "You are logged out. Logging in again...");
       setTimeout(() => {
         window.location.href = "/api/login";
       }, 500);
       return;
     }
-  }, [isAuthenticated, isLoading, toast]);
+  }, [isAuthenticated, isLoading, showError]);
 
   const { data: orders = [] } = useQuery({
     queryKey: ['/api/orders'],

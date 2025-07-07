@@ -11,10 +11,15 @@ import Marketplace from "@/pages/Marketplace";
 import Dashboard from "@/pages/Dashboard";
 import SellerDashboard from "@/pages/SellerDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
+import EnhancedAdminDashboard from "@/pages/EnhancedAdminDashboard";
 import ListAgent from "@/pages/CreateAgent";
 import Checkout from "@/pages/Checkout";
 import NotFound from "@/pages/not-found";
 import RoleBasedRedirect from "@/components/RoleBasedRedirect";
+import NotificationsPage from "@/pages/NotificationsPage";
+import AboutPage from "@/pages/AboutPage";
+import TermsPage from "@/pages/TermsPage";
+import ImprovedMarketplace from "@/pages/ImprovedMarketplace";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -24,13 +29,16 @@ function Router() {
       <RoleBasedRedirect />
       <Switch>
         <Route path="/" component={Landing} />
-        <Route path="/marketplace" component={Landing} />
+        <Route path="/marketplace" component={ImprovedMarketplace} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/seller-dashboard" component={SellerDashboard} />
-        <Route path="/admin" component={AdminDashboard} />
+        <Route path="/admin" component={EnhancedAdminDashboard} />
         <Route path="/list-agent" component={ListAgent} />
         <Route path="/create-agent" component={ListAgent} />
         <Route path="/checkout" component={Checkout} />
+        <Route path="/notifications" component={NotificationsPage} />
+        <Route path="/about" component={AboutPage} />
+        <Route path="/terms" component={TermsPage} />
         <Route component={NotFound} />
       </Switch>
     </>

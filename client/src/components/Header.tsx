@@ -54,8 +54,8 @@ export default function Header() {
               <Link href="/marketplace" className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">
                 Marketplace
               </Link>
-              <Link href="/categories" className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">
-                Categories
+              <Link href="/about" className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">
+                About
               </Link>
             </div>
             </div>
@@ -101,7 +101,12 @@ export default function Header() {
                     )}
                   </Button>
 
-                  <Button variant="ghost" size="sm" className="relative">
+                  <Button 
+                    variant="ghost" 
+                    size="sm" 
+                    className="relative"
+                    onClick={() => setLocation('/notifications')}
+                  >
                     <Bell className="h-5 w-5" />
                     <Badge 
                       variant="destructive" 
