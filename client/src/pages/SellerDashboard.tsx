@@ -20,10 +20,12 @@ import {
   Play,
   Home,
   User,
-  Activity
+  Activity,
+  Coins,
+  Users
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
-import { useToast } from "@/hooks/use-toast";
+import { useToastEnhanced } from "@/hooks/useToastEnhanced";
 import { isUnauthorizedError } from "@/lib/authUtils";
 import { apiRequest } from "@/lib/queryClient";
 import Layout from "@/components/Layout";
@@ -31,7 +33,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 
 export default function SellerDashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
-  const { toast } = useToast();
+  const { showError, showSuccess } = useToastEnhanced();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
   const isMobile = useIsMobile();
@@ -39,17 +41,13 @@ export default function SellerDashboard() {
   // Redirect if not authenticated
   useEffect(() => {
     if (!isLoading && !isAuthenticated) {
-      toast({
-        title: "Unauthorized",
-        description: "You are logged out. Logging in again...",
-        variant: "destructive",
-      });
+      showError("Unauthorized", "You are logged out. Logging in again...");
       setTimeout(() => {
         window.location.href = "/api/login";
       }, 500);
       return;
     }
-  }, [isAuthenticated, isLoading, toast]);
+  }, [isAuthenticated, isLoading, showError]);
 
   const { data: sellerAgents = [] } = useQuery({
     queryKey: ['/api/seller/agents'],
@@ -80,21 +78,13 @@ export default function SellerDashboard() {
     },
     onError: (error) => {
       if (isUnauthorizedError(error)) {
-        toast({
-          title: "Unauthorized",
-          description: "You are logged out. Logging in again...",
-          variant: "destructive",
-        });
+        showError("Unauthorized", "You are logged out. Logging in again...");
         setTimeout(() => {
           window.location.href = "/api/login";
         }, 500);
         return;
       }
-      toast({
-        title: "Error",
-        description: "Failed to update agent status. Please try again.",
-        variant: "destructive",
-      });
+      showError("Error", "Failed to update agent status. Please try again.");
     },
   });
 
@@ -172,6 +162,22 @@ export default function SellerDashboard() {
                     <Button variant="ghost" className="w-full justify-start">
                       <BarChart3 className="mr-3 h-4 w-4" />
                       Analytics
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start"
+                      onClick={() => setLocation('/points')}
+                    >
+                      <Coins className="mr-3 h-4 w-4" />
+                      Points & Rewards
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start"
+                      onClick={() => setLocation('/referrals')}
+                    >
+                      <Users className="mr-3 h-4 w-4" />
+                      Referrals
                     </Button>
                   </nav>
                 </CardContent>

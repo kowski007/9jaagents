@@ -26,8 +26,16 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 export default function LeaderboardPage() {
   const [activeTab, setActiveTab] = useState("sellers");
 
-  // Mock data - replace with real API calls
-  const topSellers = [
+  const { data: leaderboardData, isLoading } = useQuery({
+    queryKey: ['/api/leaderboard'],
+    queryFn: async () => {
+      const response = await fetch('/api/leaderboard');
+      if (!response.ok) throw new Error('Failed to fetch leaderboard');
+      return response.json();
+    },
+  });
+
+  const topSellers = leaderboardData?.topSellers || [
     {
       id: 1,
       name: "AI Solutions Pro",
@@ -90,7 +98,7 @@ export default function LeaderboardPage() {
     }
   ];
 
-  const topBuyers = [
+  const topBuyers = leaderboardData?.topBuyers || [
     {
       id: 1,
       name: "Tech Startup Inc",
@@ -143,7 +151,7 @@ export default function LeaderboardPage() {
     }
   ];
 
-  const topByPoints = [
+  const topByPoints = leaderboardData?.topByPoints || [
     {
       id: 1,
       name: "Points Master",

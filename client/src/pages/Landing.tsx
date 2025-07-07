@@ -305,7 +305,7 @@ export default function Landing() {
               We make it easy to find, purchase, and deploy AI agents for your business
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             <div className="text-center">
               <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full mx-auto mb-4 flex items-center justify-center">
                 <Shield className="h-8 w-8 text-white" />
@@ -327,12 +327,26 @@ export default function Landing() {
               <h3 className="text-xl font-semibold mb-2">Easy Integration</h3>
               <p className="text-gray-600 dark:text-gray-300">Simple APIs and one-click deployment</p>
             </div>
-            <div className="text-center">
-              <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+            <div className="text-center bg-gradient-to-br from-yellow-50 to-orange-50 p-6 rounded-xl border border-yellow-200">
+              <div className="w-16 h-16 bg-gradient-to-r from-yellow-500 to-orange-500 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <Star className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold mb-2 text-orange-700">Earn Rewards</h3>
+              <p className="text-gray-700">Earn points for daily logins, referrals, and activities. Exchange for real money!</p>
+            </div>
+            <div className="text-center bg-gradient-to-br from-purple-50 to-pink-50 p-6 rounded-xl border border-purple-200">
+              <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-pink-500 rounded-full mx-auto mb-4 flex items-center justify-center">
                 <Users className="h-8 w-8 text-white" />
               </div>
+              <h3 className="text-xl font-semibold mb-2 text-purple-700">Referral System</h3>
+              <p className="text-gray-700">Invite friends and earn up to 5,000 points per successful referral</p>
+            </div>
+            <div className="text-center">
+              <div className="w-16 h-16 bg-gradient-to-r from-green-500 to-green-600 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <TrendingUp className="h-8 w-8 text-white" />
+              </div>
               <h3 className="text-xl font-semibold mb-2">24/7 Support</h3>
-              <p className="text-gray-600 dark:text-gray-300">Expert support team ready to help</p>
+              <p className="text-gray-600 dark:text-gray-300">Expert support team ready to help you succeed</p>
             </div>
           </div>
         </div>

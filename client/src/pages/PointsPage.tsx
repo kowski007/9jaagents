@@ -41,23 +41,30 @@ export default function PointsPage() {
     routingNumber: ""
   });
 
-  // Mock data - replace with real API calls
+  const { data: pointsHistory = [] } = useQuery({
+    queryKey: ['/api/points/history'],
+    enabled: isAuthenticated,
+  });
+
   const pointsData = {
     totalPoints: user?.totalPoints || 0,
-    todayPoints: 0,
-    weeklyPoints: 350,
-    monthlyPoints: 1250,
+    todayPoints: pointsHistory.filter(h => h.createdAt?.includes(new Date().toISOString().split('T')[0])).reduce((sum, h) => sum + (h.points > 0 ? h.points : 0), 0),
+    weeklyPoints: pointsHistory.filter(h => {
+      const weekAgo = new Date();
+      weekAgo.setDate(weekAgo.getDate() - 7);
+      return new Date(h.createdAt) >= weekAgo;
+    }).reduce((sum, h) => sum + (h.points > 0 ? h.points : 0), 0),
+    monthlyPoints: pointsHistory.filter(h => {
+      const monthAgo = new Date();
+      monthAgo.setMonth(monthAgo.getMonth() - 1);
+      return new Date(h.createdAt) >= monthAgo;
+    }).reduce((sum, h) => sum + (h.points > 0 ? h.points : 0), 0),
     exchangeRate: 10, // 10 points = 1 Naira
     dailyLoginStreak: 7,
     nextReward: 500
   };
 
-  const pointsHistory = [
-    { id: 1, type: "earned", source: "daily_login", points: 100, description: "Daily login bonus", date: "2025-07-07" },
-    { id: 2, type: "earned", source: "referral_signup", points: 1000, description: "Friend signup bonus", date: "2025-07-06" },
-    { id: 3, type: "earned", source: "referral_purchase", points: 5000, description: "Referral purchase bonus", date: "2025-07-05" },
-    { id: 4, type: "spent", source: "points_exchange", points: -2000, description: "Exchanged for ₦200", date: "2025-07-04" }
-  ];
+  // pointsHistory is already fetched from the API above
 
   const referralStats = {
     totalReferrals: 12,
@@ -476,32 +483,46 @@ export default function PointsPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-3">
-                    {pointsHistory.map((item) => (
-                      <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg">
-                        <div className="flex items-center space-x-3">
-                          <div className={`p-2 rounded-full ${
-                            item.type === 'earned' 
-                              ? 'bg-green-100 dark:bg-green-900/20' 
-                              : 'bg-red-100 dark:bg-red-900/20'
-                          }`}>
-                            {item.type === 'earned' ? (
-                              <TrendingUp className="h-4 w-4 text-green-600" />
-                            ) : (
-                              <ArrowRight className="h-4 w-4 text-red-600" />
-                            )}
-                          </div>
-                          <div>
-                            <div className="font-medium">{item.description}</div>
-                            <div className="text-sm text-gray-600">{item.date}</div>
-                          </div>
-                        </div>
-                        <div className={`font-semibold ${
-                          item.type === 'earned' ? 'text-green-600' : 'text-red-600'
-                        }`}>
-                          {item.type === 'earned' ? '+' : ''}{item.points.toLocaleString()}
-                        </div>
+                    {pointsHistory.length === 0 ? (
+                      <div className="text-center py-8">
+                        <Coins className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                        <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+                          No history yet
+                        </h3>
+                        <p className="text-gray-600 dark:text-gray-400">
+                          Start earning points to see your history here
+                        </p>
                       </div>
-                    ))}
+                    ) : (
+                      pointsHistory.map((item) => (
+                        <div key={item.id} className="flex items-center justify-between p-4 border rounded-lg">
+                          <div className="flex items-center space-x-3">
+                            <div className={`p-2 rounded-full ${
+                              item.type === 'earned' 
+                                ? 'bg-green-100 dark:bg-green-900/20' 
+                                : 'bg-red-100 dark:bg-red-900/20'
+                            }`}>
+                              {item.type === 'earned' ? (
+                                <TrendingUp className="h-4 w-4 text-green-600" />
+                              ) : (
+                                <ArrowRight className="h-4 w-4 text-red-600" />
+                              )}
+                            </div>
+                            <div>
+                              <div className="font-medium">{item.description}</div>
+                              <div className="text-sm text-gray-600">
+                                {new Date(item.createdAt).toLocaleDateString()}
+                              </div>
+                            </div>
+                          </div>
+                          <div className={`font-semibold ${
+                            item.type === 'earned' ? 'text-green-600' : 'text-red-600'
+                          }`}>
+                            {item.type === 'earned' ? '+' : ''}{item.points.toLocaleString()}
+                          </div>
+                        </div>
+                      ))
+                    )}
                   </div>
                 </CardContent>
               </Card>

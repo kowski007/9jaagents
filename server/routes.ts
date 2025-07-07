@@ -690,6 +690,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Leaderboard route
+  app.get('/api/leaderboard', async (req, res) => {
+    try {
+      // Get top sellers by earnings
+      const topSellers = await db.select({
+        id: users.id,
+        name: sql<string>`COALESCE(${users.firstName}, split_part(${users.email}, '@', 1))`,
+        totalEarnings: users.totalEarnings,
+        level: users.sellerLevel,
+        agentsSold: sql<number>`(SELECT COUNT(*) FROM ${orders} WHERE ${orders.sellerId} = ${users.id} AND ${orders.status} = 'completed')`,
+        rating: sql<number>`COALESCE((SELECT AVG(${reviews.rating}) FROM ${reviews} WHERE ${reviews.reviewerId} IN (SELECT ${orders.buyerId} FROM ${orders} WHERE ${orders.sellerId} = ${users.id})), 0)`,
+      })
+      .from(users)
+      .where(eq(users.role, 'seller'))
+      .orderBy(desc(users.totalEarnings))
+      .limit(10);
+
+      // Get top buyers by spending
+      const topBuyers = await db.select({
+        id: users.id,
+        name: sql<string>`COALESCE(${users.firstName}, split_part(${users.email}, '@', 1))`,
+        totalSpent: users.totalSpent,
+        level: users.buyerLevel,
+        agentsPurchased: sql<number>`(SELECT COUNT(*) FROM ${orders} WHERE ${orders.buyerId} = ${users.id} AND ${orders.status} = 'completed')`,
+      })
+      .from(users)
+      .orderBy(desc(users.totalSpent))
+      .limit(10);
+
+      // Get top users by points
+      const topByPoints = await db.select({
+        id: users.id,
+        name: sql<string>`COALESCE(${users.firstName}, split_part(${users.email}, '@', 1))`,
+        totalPoints: users.totalPoints,
+        pointsThisMonth: sql<number>`COALESCE((SELECT SUM(${pointsHistory.points}) FROM ${pointsHistory} WHERE ${pointsHistory.userId} = ${users.id} AND ${pointsHistory.createdAt} >= NOW() - INTERVAL '30 days' AND ${pointsHistory.type} = 'earned'), 0)`,
+      })
+      .from(users)
+      .orderBy(desc(users.totalPoints))
+      .limit(10);
+
+      res.json({
+        topSellers,
+        topBuyers,
+        topByPoints
+      });
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error);
+      res.status(500).json({ message: "Failed to fetch leaderboard" });
+    }
+  });
+
   // Admin routes
   app.post('/api/admin/give-points', isAuthenticated, isAdmin, async (req: AuthenticatedRequest, res) => {
     try {
