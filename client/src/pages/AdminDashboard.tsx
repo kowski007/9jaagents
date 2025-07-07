@@ -49,7 +49,48 @@ export default function AdminDashboard() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
 
-  // Check if user is admin
+  // All hooks must be called before any conditional returns
+  const { data: users, isLoading: usersLoading } = useQuery({
+    queryKey: ['/api/admin/users'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/users');
+      if (!response.ok) throw new Error('Failed to fetch users');
+      return response.json();
+    },
+    enabled: !!(user && (user as any).role === "admin"), // Only run if user is admin
+  });
+
+  const { data: agents, isLoading: agentsLoading } = useQuery({
+    queryKey: ['/api/agents'],
+    queryFn: async () => {
+      const response = await fetch('/api/agents');
+      if (!response.ok) throw new Error('Failed to fetch agents');
+      return response.json();
+    },
+    enabled: !!(user && (user as any).role === "admin"), // Only run if user is admin
+  });
+
+  const { data: orders, isLoading: ordersLoading } = useQuery({
+    queryKey: ['/api/admin/orders'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/orders');
+      if (!response.ok) throw new Error('Failed to fetch orders');
+      return response.json();
+    },
+    enabled: !!(user && (user as any).role === "admin"), // Only run if user is admin
+  });
+
+  const { data: adminStats, isLoading: statsLoading } = useQuery({
+    queryKey: ['/api/admin/stats'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/stats');
+      if (!response.ok) throw new Error('Failed to fetch admin stats');
+      return response.json();
+    },
+    enabled: !!(user && (user as any).role === "admin"), // Only run if user is admin
+  });
+
+  // Check if user is admin - moved after hooks
   if (!user || (user as any).role !== "admin") {
     return (
       <Layout>
@@ -65,42 +106,6 @@ export default function AdminDashboard() {
       </Layout>
     );
   }
-
-  const { data: users, isLoading: usersLoading } = useQuery({
-    queryKey: ['/api/admin/users'],
-    queryFn: async () => {
-      const response = await fetch('/api/admin/users');
-      if (!response.ok) throw new Error('Failed to fetch users');
-      return response.json();
-    },
-  });
-
-  const { data: agents, isLoading: agentsLoading } = useQuery({
-    queryKey: ['/api/agents'],
-    queryFn: async () => {
-      const response = await fetch('/api/agents');
-      if (!response.ok) throw new Error('Failed to fetch agents');
-      return response.json();
-    },
-  });
-
-  const { data: orders, isLoading: ordersLoading } = useQuery({
-    queryKey: ['/api/admin/orders'],
-    queryFn: async () => {
-      const response = await fetch('/api/admin/orders');
-      if (!response.ok) throw new Error('Failed to fetch orders');
-      return response.json();
-    },
-  });
-
-  const { data: adminStats, isLoading: statsLoading } = useQuery({
-    queryKey: ['/api/admin/stats'],
-    queryFn: async () => {
-      const response = await fetch('/api/admin/stats');
-      if (!response.ok) throw new Error('Failed to fetch admin stats');
-      return response.json();
-    },
-  });
 
   if (usersLoading || agentsLoading || ordersLoading || statsLoading) {
     return (
