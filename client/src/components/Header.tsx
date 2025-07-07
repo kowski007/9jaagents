@@ -129,11 +129,13 @@ export default function Header() {
                       <DropdownMenuItem onClick={() => setLocation('/dashboard')}>
                         Dashboard
                       </DropdownMenuItem>
-                      <DropdownMenuItem onClick={() => setLocation('/seller-dashboard')}>
-                        Seller Dashboard
-                      </DropdownMenuItem>
+                      {(user?.role === 'seller' || user?.role === 'admin') && (
+                        <DropdownMenuItem onClick={() => setLocation('/seller-dashboard')}>
+                          Seller Dashboard
+                        </DropdownMenuItem>
+                      )}
                       {user?.role === 'admin' && (
-                        <DropdownMenuItem onClick={() => setLocation('/admin-dashboard')}>
+                        <DropdownMenuItem onClick={() => setLocation('/admin')}>
                           Admin Dashboard
                         </DropdownMenuItem>
                       )}

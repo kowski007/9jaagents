@@ -14,22 +14,26 @@ import AdminDashboard from "@/pages/AdminDashboard";
 import ListAgent from "@/pages/CreateAgent";
 import Checkout from "@/pages/Checkout";
 import NotFound from "@/pages/not-found";
+import RoleBasedRedirect from "@/components/RoleBasedRedirect";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
 
   return (
-    <Switch>
-      <Route path="/" component={Landing} />
-      <Route path="/marketplace" component={Landing} />
-      <Route path="/dashboard" component={Dashboard} />
-      <Route path="/seller-dashboard" component={SellerDashboard} />
-      <Route path="/admin" component={AdminDashboard} />
-      <Route path="/list-agent" component={ListAgent} />
-      <Route path="/create-agent" component={ListAgent} />
-      <Route path="/checkout" component={Checkout} />
-      <Route component={NotFound} />
-    </Switch>
+    <>
+      <RoleBasedRedirect />
+      <Switch>
+        <Route path="/" component={Landing} />
+        <Route path="/marketplace" component={Landing} />
+        <Route path="/dashboard" component={Dashboard} />
+        <Route path="/seller-dashboard" component={SellerDashboard} />
+        <Route path="/admin" component={AdminDashboard} />
+        <Route path="/list-agent" component={ListAgent} />
+        <Route path="/create-agent" component={ListAgent} />
+        <Route path="/checkout" component={Checkout} />
+        <Route component={NotFound} />
+      </Switch>
+    </>
   );
 }
 

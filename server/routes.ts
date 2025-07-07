@@ -575,6 +575,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Seller registration route
+  app.post('/api/become-seller', isAuthenticated, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user!.claims.sub;
+      const { businessName, description, expertise, experience, portfolio, motivation } = req.body;
+
+      // Update user role to seller
+      const updatedUser = await storage.updateUserRole(userId, 'seller');
+      
+      // You could store the additional seller information in a separate table if needed
+      // For now, we just update the role
+      
+      res.json({ 
+        message: "Successfully became a seller!",
+        user: updatedUser
+      });
+    } catch (error) {
+      console.error("Error becoming seller:", error);
+      res.status(500).json({ message: "Failed to become seller" });
+    }
+  });
+
   // Admin routes
   app.get('/api/admin/users', isAuthenticated, isAdmin, async (req, res) => {
     try {

@@ -30,6 +30,7 @@ import {
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import Layout from "@/components/Layout";
+import BecomeSellerModal from "@/pages/BecomeSellerModal";
 
 export default function Dashboard() {
   const { user, isAuthenticated, isLoading } = useAuth();
@@ -37,6 +38,7 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState("overview");
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
+  const [showBecomeSellerModal, setShowBecomeSellerModal] = useState(false);
 
   // Redirect if not authenticated
   useEffect(() => {
@@ -188,17 +190,31 @@ export default function Dashboard() {
           Settings
         </Button>
         <div className="pt-4 border-t">
-          <Button 
-            variant="outline" 
-            className="w-full justify-start"
-            onClick={() => {
-              setLocation('/seller-dashboard');
-              setIsMobileMenuOpen(false);
-            }}
-          >
-            <Star className="mr-3 h-4 w-4" />
-            Become a Seller
-          </Button>
+          {user?.role === 'seller' || user?.role === 'admin' ? (
+            <Button 
+              variant="outline" 
+              className="w-full justify-start"
+              onClick={() => {
+                setLocation('/seller-dashboard');
+                setIsMobileMenuOpen(false);
+              }}
+            >
+              <Star className="mr-3 h-4 w-4" />
+              Seller Dashboard
+            </Button>
+          ) : (
+            <Button 
+              variant="outline" 
+              className="w-full justify-start"
+              onClick={() => {
+                setShowBecomeSellerModal(true);
+                setIsMobileMenuOpen(false);
+              }}
+            >
+              <Star className="mr-3 h-4 w-4" />
+              Become a Seller
+            </Button>
+          )}
         </div>
       </nav>
     </div>
@@ -698,6 +714,11 @@ export default function Dashboard() {
         </div>
       </div>
       </div>
+      
+      <BecomeSellerModal 
+        isOpen={showBecomeSellerModal} 
+        onClose={() => setShowBecomeSellerModal(false)} 
+      />
     </Layout>
   );
 }
