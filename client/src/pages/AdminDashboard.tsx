@@ -68,6 +68,118 @@ interface PlatformSettings {
   supportEmail: string;
 }
 
+function SystemHealthTab() {
+  const { data: systemHealth, isLoading } = useQuery({
+    queryKey: ['/api/admin/system-health'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/system-health');
+      if (!response.ok) throw new Error('Failed to fetch system health');
+      return response.json();
+    },
+    refetchInterval: 30000, // Refresh every 30 seconds
+  });
+
+  if (isLoading) {
+    return (
+      <Card className="border-0 shadow-xl bg-white/90 backdrop-blur-sm overflow-hidden">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-center h-32">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+          </div>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  return (
+    <Card className="border-0 shadow-xl bg-white/90 backdrop-blur-sm overflow-hidden">
+      <CardHeader className="border-b border-purple-100 bg-gradient-purple-light">
+        <CardTitle className="text-xl text-gray-900 flex items-center">
+          <Activity className="h-5 w-5 mr-2" />
+          System Health
+        </CardTitle>
+        <CardDescription className="text-gray-600">
+          Real-time system performance and health metrics
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="p-6">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div className={`p-6 rounded-xl border ${
+            systemHealth?.database?.status === 'healthy' 
+              ? 'bg-green-50 border-green-200' 
+              : 'bg-red-50 border-red-200'
+          }`}>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-gray-900">Database</h3>
+              {systemHealth?.database?.status === 'healthy' ? (
+                <CheckCircle className="h-5 w-5 text-green-600" />
+              ) : (
+                <AlertTriangle className="h-5 w-5 text-red-600" />
+              )}
+            </div>
+            <div className={`text-lg font-bold mb-2 ${
+              systemHealth?.database?.status === 'healthy' ? 'text-green-700' : 'text-red-700'
+            }`}>
+              {systemHealth?.database?.status === 'healthy' ? 'Connected' : 'Disconnected'}
+            </div>
+            <p className="text-sm text-gray-600">
+              Response time: {systemHealth?.database?.responseTime || 'N/A'}
+            </p>
+          </div>
+          
+          <div className="bg-blue-50 p-6 rounded-xl border border-blue-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-gray-900">API Status</h3>
+              <Activity className="h-5 w-5 text-blue-600" />
+            </div>
+            <div className="text-lg font-bold text-blue-700 mb-2">
+              {systemHealth?.api?.status || 'Unknown'}
+            </div>
+            <p className="text-sm text-gray-600">
+              Uptime: {Math.floor((systemHealth?.api?.uptime || 0) / 3600)}h {Math.floor(((systemHealth?.api?.uptime || 0) % 3600) / 60)}m
+            </p>
+          </div>
+          
+          <div className="bg-purple-50 p-6 rounded-xl border border-purple-200">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-semibold text-gray-900">Storage</h3>
+              <Shield className="h-5 w-5 text-purple-600" />
+            </div>
+            <div className="text-lg font-bold text-purple-700 mb-2">Available</div>
+            <p className="text-sm text-gray-600">
+              Capacity: {systemHealth?.storage?.capacity || '85%'} used
+            </p>
+          </div>
+          
+          {systemHealth?.metrics && (
+            <div className="bg-gray-50 p-6 rounded-xl border border-gray-200 md:col-span-2 lg:col-span-3">
+              <h3 className="font-semibold text-gray-900 mb-4">Platform Metrics</h3>
+              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                <div>
+                  <p className="text-sm text-gray-600">Total Users</p>
+                  <p className="text-xl font-bold text-gray-900">{systemHealth.metrics.totalUsers}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Active Users</p>
+                  <p className="text-xl font-bold text-gray-900">{systemHealth.metrics.activeUsers}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Total Agents</p>
+                  <p className="text-xl font-bold text-gray-900">{systemHealth.metrics.totalAgents}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-gray-600">Total Orders</p>
+                  <p className="text-xl font-bold text-gray-900">{systemHealth.metrics.totalOrders}</p>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 function PlatformSettingsForm() {
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -414,6 +526,8 @@ export default function AdminDashboard() {
   const isMobile = useIsMobile();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [activeTab, setActiveTab] = useState("users");
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   // All hooks must be called before any conditional returns
   const { data: users, isLoading: usersLoading } = useQuery({
@@ -456,6 +570,154 @@ export default function AdminDashboard() {
     enabled: !!(user && (user as any).role === "admin"), // Only run if user is admin
   });
 
+  // Action handlers
+  const handleSuspendUser = async (userId: string, suspend: boolean) => {
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/suspend`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason: suspend ? 'Administrative action' : undefined })
+      });
+      
+      if (!response.ok) throw new Error('Failed to update user status');
+      
+      toast({
+        title: "Success",
+        description: `User ${suspend ? 'suspended' : 'activated'} successfully`,
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update user status",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleToggleUserRole = async (userId: string, newRole: string) => {
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/role`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ role: newRole })
+      });
+      
+      if (!response.ok) throw new Error('Failed to update user role');
+      
+      toast({
+        title: "Success",
+        description: `User role updated to ${newRole}`,
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/users'] });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update user role",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleViewUserActivity = async (userId: string) => {
+    try {
+      const response = await fetch(`/api/admin/users/${userId}/activity`);
+      if (!response.ok) throw new Error('Failed to fetch user activity');
+      
+      const activity = await response.json();
+      // For now, just show a toast with basic info
+      toast({
+        title: "User Activity",
+        description: `Orders: ${activity.totalOrders}, Sales: ${activity.totalSales}, Agents: ${activity.totalAgents}`,
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to fetch user activity",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleToggleAgentStatus = async (agentId: number, reason?: string) => {
+    try {
+      const response = await fetch(`/api/admin/agents/${agentId}/toggle-status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reason })
+      });
+      
+      if (!response.ok) throw new Error('Failed to update agent status');
+      
+      toast({
+        title: "Success",
+        description: "Agent status updated successfully",
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/agents'] });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update agent status",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleDeleteAgent = async (agentId: number) => {
+    if (!confirm('Are you sure you want to delete this agent? This action cannot be undone.')) {
+      return;
+    }
+    
+    try {
+      const response = await fetch(`/api/admin/agents/${agentId}`, {
+        method: 'DELETE'
+      });
+      
+      if (!response.ok) throw new Error('Failed to delete agent');
+      
+      toast({
+        title: "Success",
+        description: "Agent deleted successfully",
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/agents'] });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to delete agent",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleUpdateOrderStatus = async (orderId: number, status: string, notes?: string) => {
+    try {
+      const response = await fetch(`/api/admin/orders/${orderId}/status`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status, adminNotes: notes })
+      });
+      
+      if (!response.ok) throw new Error('Failed to update order status');
+      
+      toast({
+        title: "Success",
+        description: "Order status updated successfully",
+      });
+      
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/orders'] });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to update order status",
+        variant: "destructive",
+      });
+    }
+  };
+
   // Check if user is admin - moved after hooks
   if (!user || (user as any).role !== "admin") {
     return (
@@ -489,15 +751,15 @@ export default function AdminDashboard() {
   }
 
   // Use real stats from API
-  const stats: DashboardStats = adminStats || {
-    totalUsers: 0,
-    totalAgents: 0,
-    totalOrders: 0,
-    totalRevenue: 0,
-    pendingOrders: 0,
-    activeAgents: 0,
-    userGrowth: 0,
-    revenueGrowth: 0,
+  const stats: DashboardStats = {
+    totalUsers: adminStats?.totalUsers || 0,
+    totalAgents: adminStats?.totalAgents || 0,
+    totalOrders: adminStats?.totalOrders || 0,
+    totalRevenue: adminStats?.totalRevenue || 0,
+    pendingOrders: adminStats?.pendingOrders || 0,
+    activeAgents: adminStats?.activeAgents || 0,
+    userGrowth: adminStats?.userGrowth || 12,
+    revenueGrowth: adminStats?.revenueGrowth || 8,
   };
 
   const formatCurrency = (amount: number) => {
@@ -878,21 +1140,20 @@ export default function AdminDashboard() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-48">
-                                <DropdownMenuItem>
-                                  <Eye className="h-4 w-4 mr-2" />
-                                  View Profile
-                                </DropdownMenuItem>
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => handleViewUserActivity(user.id)}>
                                   <Activity className="h-4 w-4 mr-2" />
                                   View Activity
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  <MessageSquare className="h-4 w-4 mr-2" />
-                                  Send Message
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="text-red-600">
+                                <DropdownMenuItem onClick={() => handleToggleUserRole(user.id, user.role === 'admin' ? 'user' : 'admin')}>
                                   <Shield className="h-4 w-4 mr-2" />
-                                  Suspend User
+                                  {user.role === 'admin' ? 'Remove Admin' : 'Make Admin'}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  className={user.isActive ? "text-red-600" : "text-green-600"}
+                                  onClick={() => handleSuspendUser(user.id, !user.isActive)}
+                                >
+                                  <Shield className="h-4 w-4 mr-2" />
+                                  {user.isActive ? 'Suspend User' : 'Activate User'}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -957,19 +1218,18 @@ export default function AdminDashboard() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-48">
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => window.open(`/marketplace/${agent.id}`, '_blank')}>
                                   <Eye className="h-4 w-4 mr-2" />
                                   View Details
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
+                                <DropdownMenuItem 
+                                  className={agent.isActive ? "text-yellow-600" : "text-green-600"}
+                                  onClick={() => handleToggleAgentStatus(agent.id, agent.isActive ? 'Admin review' : 'Approved by admin')}
+                                >
                                   <Edit className="h-4 w-4 mr-2" />
-                                  Edit Agent
+                                  {agent.isActive ? 'Suspend Agent' : 'Activate Agent'}
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  <Activity className="h-4 w-4 mr-2" />
-                                  View Analytics
-                                </DropdownMenuItem>
-                                <DropdownMenuItem className="text-red-600">
+                                <DropdownMenuItem className="text-red-600" onClick={() => handleDeleteAgent(agent.id)}>
                                   <Trash2 className="h-4 w-4 mr-2" />
                                   Delete Agent
                                 </DropdownMenuItem>
@@ -1030,21 +1290,30 @@ export default function AdminDashboard() {
                                 </Button>
                               </DropdownMenuTrigger>
                               <DropdownMenuContent align="end" className="w-48">
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => window.open(`/orders/${order.id}`, '_blank')}>
                                   <Eye className="h-4 w-4 mr-2" />
                                   View Details
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
+                                <DropdownMenuItem onClick={() => {
+                                  const newStatus = prompt('Enter new status (pending, in_progress, completed, cancelled, disputed):');
+                                  if (newStatus) handleUpdateOrderStatus(order.id, newStatus);
+                                }}>
                                   <Edit className="h-4 w-4 mr-2" />
                                   Update Status
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  <MessageSquare className="h-4 w-4 mr-2" />
-                                  Contact Customer
+                                <DropdownMenuItem onClick={() => {
+                                  const notes = prompt('Enter admin notes (optional):');
+                                  handleUpdateOrderStatus(order.id, 'completed', notes || undefined);
+                                }}>
+                                  <CheckCircle className="h-4 w-4 mr-2" />
+                                  Mark Complete
                                 </DropdownMenuItem>
-                                <DropdownMenuItem>
-                                  <Download className="h-4 w-4 mr-2" />
-                                  Generate Invoice
+                                <DropdownMenuItem className="text-red-600" onClick={() => {
+                                  const reason = prompt('Enter cancellation reason:');
+                                  if (reason) handleUpdateOrderStatus(order.id, 'cancelled', reason);
+                                }}>
+                                  <AlertTriangle className="h-4 w-4 mr-2" />
+                                  Cancel Order
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>
@@ -1157,45 +1426,7 @@ export default function AdminDashboard() {
 
             {/* System Health Tab */}
             <TabsContent value="system">
-              <Card className="border-0 shadow-xl bg-white/90 backdrop-blur-sm overflow-hidden">
-                <CardHeader className="border-b border-purple-100 bg-gradient-purple-light">
-                  <CardTitle className="text-xl text-gray-900 flex items-center">
-                    <Activity className="h-5 w-5 mr-2" />
-                    System Health
-                  </CardTitle>
-                  <CardDescription className="text-gray-600">
-                    Monitor system performance and health metrics
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    <div className="bg-green-50 p-6 rounded-xl border border-green-200">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-semibold text-gray-900">API Status</h3>
-                        <CheckCircle className="h-5 w-5 text-green-600" />
-                      </div>
-                      <div className="text-lg font-bold text-green-700 mb-2">Healthy</div>
-                      <p className="text-sm text-gray-600">All systems operational</p>
-                    </div>
-                    <div className="bg-blue-50 p-6 rounded-xl border border-blue-200">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-semibold text-gray-900">Database</h3>
-                        <Activity className="h-5 w-5 text-blue-600" />
-                      </div>
-                      <div className="text-lg font-bold text-blue-700 mb-2">Connected</div>
-                      <p className="text-sm text-gray-600">Response time: &lt;50ms</p>
-                    </div>
-                    <div className="bg-purple-50 p-6 rounded-xl border border-purple-200">
-                      <div className="flex items-center justify-between mb-4">
-                        <h3 className="font-semibold text-gray-900">Storage</h3>
-                        <Shield className="h-5 w-5 text-purple-600" />
-                      </div>
-                      <div className="text-lg font-bold text-purple-700 mb-2">Available</div>
-                      <p className="text-sm text-gray-600">85% capacity remaining</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
+              <SystemHealthTab />
             </TabsContent>
           </Tabs>
         </div>

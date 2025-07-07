@@ -112,16 +112,20 @@ export interface IStorage {
   updateWalletBalance(userId: string, amount: number): Promise<Wallet>;
   addWalletTransaction(transaction: InsertWalletTransaction): Promise<WalletTransaction>;
   getWalletTransactions(userId: string, limit?: number): Promise<WalletTransaction[]>;
-  
+
   // Withdrawal operations
   createWithdrawalRequest(request: InsertWithdrawalRequest): Promise<WithdrawalRequest>;
   getWithdrawalRequests(userId?: string, status?: string): Promise<WithdrawalRequest[]>;
   updateWithdrawalStatus(id: number, status: string, adminNotes?: string): Promise<WithdrawalRequest>;
-  
+
   // Admin commission operations
   createAdminCommission(commission: InsertAdminCommission): Promise<AdminCommission>;
   getAdminCommissions(status?: string): Promise<AdminCommission[]>;
   collectAdminCommission(id: number): Promise<AdminCommission>;
+
+  // Platform settings methods
+  getPlatformSettings(): Promise<any>;
+  savePlatformSettings(settings: any): Promise<any>;
 }
 
 export class PostgreSQLStorage implements IStorage {
@@ -657,7 +661,7 @@ export class PostgreSQLStorage implements IStorage {
   async getWalletTransactions(userId: string, limit = 50): Promise<WalletTransaction[]> {
     const wallet = await this.getWallet(userId);
     if (!wallet) return [];
-    
+
     const result = await db
       .select()
       .from(walletTransactions)
@@ -675,15 +679,15 @@ export class PostgreSQLStorage implements IStorage {
 
   async getWithdrawalRequests(userId?: string, status?: string): Promise<WithdrawalRequest[]> {
     let query = db.select().from(withdrawalRequests);
-    
+
     if (userId) {
       query = query.where(eq(withdrawalRequests.userId, userId));
     }
-    
+
     if (status) {
       query = query.where(eq(withdrawalRequests.status, status));
     }
-    
+
     return query.orderBy(desc(withdrawalRequests.createdAt));
   }
 
@@ -692,15 +696,15 @@ export class PostgreSQLStorage implements IStorage {
       status, 
       updatedAt: new Date() 
     };
-    
+
     if (adminNotes) {
       updateData.adminNotes = adminNotes;
     }
-    
+
     if (status === 'processed') {
       updateData.processedAt = new Date();
     }
-    
+
     const result = await db
       .update(withdrawalRequests)
       .set(updateData)
@@ -717,11 +721,11 @@ export class PostgreSQLStorage implements IStorage {
 
   async getAdminCommissions(status?: string): Promise<AdminCommission[]> {
     let query = db.select().from(adminCommissions);
-    
+
     if (status) {
       query = query.where(eq(adminCommissions.status, status));
     }
-    
+
     return query.orderBy(desc(adminCommissions.createdAt));
   }
 
@@ -736,6 +740,30 @@ export class PostgreSQLStorage implements IStorage {
       .returning();
     return result[0];
   }
+
+    // Platform settings methods
+    async getPlatformSettings() {
+      try {
+        // For now, we'll store settings in a simple JSON file or return defaults
+        // In production, you'd have a dedicated settings table
+        return null; // Will trigger creation of defaults
+      } catch (error) {
+        console.error("Error getting platform settings:", error);
+        return null;
+      }
+    }
+  
+    async savePlatformSettings(settings: any) {
+      try {
+        // For now, just log the settings
+        // In production, save to a dedicated settings table
+        console.log("Platform settings saved:", settings);
+        return settings;
+      } catch (error) {
+        console.error("Error saving platform settings:", error);
+        throw error;
+      }
+    }
 }
 
 export const storage = new PostgreSQLStorage();
