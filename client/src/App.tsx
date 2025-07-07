@@ -12,6 +12,7 @@ import Dashboard from "@/pages/Dashboard";
 import SellerDashboard from "@/pages/SellerDashboard";
 import AdminDashboard from "@/pages/AdminDashboard";
 import EnhancedAdminDashboard from "@/pages/EnhancedAdminDashboard";
+import SuperAdminDashboard from "@/pages/SuperAdminDashboard";
 import ListAgent from "@/pages/CreateAgent";
 import Checkout from "@/pages/Checkout";
 import NotFound from "@/pages/not-found";
@@ -37,7 +38,8 @@ function Router() {
         <Route path="/marketplace" component={ImprovedMarketplace} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/seller-dashboard" component={SellerDashboard} />
-        <Route path="/admin" component={EnhancedAdminDashboard} />
+        <Route path="/admin" component={SuperAdminDashboard} />
+        <Route path="/admin-enhanced" component={EnhancedAdminDashboard} />
         <Route path="/list-agent" component={ListAgent} />
         <Route path="/create-agent" component={ListAgent} />
         <Route path="/checkout" component={Checkout} />

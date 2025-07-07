@@ -1304,6 +1304,189 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Super Admin Routes
+  app.get('/api/admin/stats', isAuthenticated, isAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const agents = await storage.getAgents();
+      const orders = await storage.getOrders({});
+      const commissions = await storage.getAdminCommissions();
+      
+      const totalUsers = users.length;
+      const totalAgents = agents.length;
+      const totalRevenue = orders.reduce((sum, order) => sum + parseFloat(order.amount), 0);
+      const totalPoints = users.reduce((sum, user) => sum + (user.totalPoints || 0), 0);
+      const pointsExchanged = 0; // TODO: Calculate from exchange history
+      const pointsValue = totalPoints * 1; // 1 point = 1 naira
+      
+      res.json({
+        totalUsers,
+        totalAgents,
+        totalRevenue,
+        totalPoints,
+        pointsExchanged,
+        pointsValue
+      });
+    } catch (error) {
+      console.error("Error fetching admin stats:", error);
+      res.status(500).json({ message: "Failed to fetch admin stats" });
+    }
+  });
+
+  app.get('/api/admin/users', isAuthenticated, isAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      res.json(users);
+    } catch (error) {
+      console.error("Error fetching admin users:", error);
+      res.status(500).json({ message: "Failed to fetch users" });
+    }
+  });
+
+  app.post('/api/admin/users', isAuthenticated, isAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { email, firstName, lastName, role, isActive, totalPoints } = req.body;
+      
+      if (!email || !firstName || !lastName) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      // Check if user already exists
+      const existingUser = await storage.getUserByEmail(email);
+      if (existingUser) {
+        return res.status(400).json({ message: "User with this email already exists" });
+      }
+      
+      const newUser = await storage.upsertUser({
+        id: `admin-created-${Date.now()}`,
+        email,
+        firstName,
+        lastName,
+        role: role || 'user',
+        isActive: isActive !== undefined ? isActive : true,
+        totalPoints: totalPoints || 0
+      });
+      
+      res.json(newUser);
+    } catch (error) {
+      console.error("Error creating user:", error);
+      res.status(500).json({ message: "Failed to create user" });
+    }
+  });
+
+  app.put('/api/admin/users/:id', isAuthenticated, isAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { id } = req.params;
+      const updates = req.body;
+      
+      // Update user role if provided
+      if (updates.role) {
+        await storage.updateUserRole(id, updates.role);
+      }
+      
+      // Toggle status if provided
+      if (updates.isActive !== undefined) {
+        const user = await storage.getUser(id);
+        if (user && user.isActive !== updates.isActive) {
+          await storage.toggleUserActiveStatus(id);
+        }
+      }
+      
+      // Update other fields if needed
+      const updatedUser = await storage.getUser(id);
+      res.json(updatedUser);
+    } catch (error) {
+      console.error("Error updating user:", error);
+      res.status(500).json({ message: "Failed to update user" });
+    }
+  });
+
+  app.delete('/api/admin/users/:id', isAuthenticated, isAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { id } = req.params;
+      
+      // For safety, we'll mark as inactive instead of actual deletion
+      await storage.toggleUserActiveStatus(id);
+      
+      res.json({ message: "User deactivated successfully" });
+    } catch (error) {
+      console.error("Error deleting user:", error);
+      res.status(500).json({ message: "Failed to delete user" });
+    }
+  });
+
+  app.get('/api/admin/agents', isAuthenticated, isAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const agents = await storage.getAgents();
+      
+      // Fetch seller and category info for each agent
+      const enrichedAgents = await Promise.all(
+        agents.map(async (agent) => {
+          const seller = await storage.getUser(agent.sellerId);
+          const categories = await storage.getCategories();
+          const category = categories.find(c => c.id === agent.categoryId);
+          
+          return {
+            ...agent,
+            seller,
+            category
+          };
+        })
+      );
+      
+      res.json(enrichedAgents);
+    } catch (error) {
+      console.error("Error fetching admin agents:", error);
+      res.status(500).json({ message: "Failed to fetch agents" });
+    }
+  });
+
+  app.delete('/api/admin/agents/:id', isAuthenticated, isAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const agentId = parseInt(req.params.id);
+      await storage.deleteAgent(agentId);
+      res.json({ message: "Agent deleted successfully" });
+    } catch (error) {
+      console.error("Error deleting agent:", error);
+      res.status(500).json({ message: "Failed to delete agent" });
+    }
+  });
+
+  app.get('/api/admin/settings', isAuthenticated, isAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      // Return default platform settings - in production this would come from a settings table
+      const settings = {
+        siteName: "AgentMarket",
+        commissionRate: 10,
+        minWithdrawal: 1000,
+        maxWithdrawal: 500000,
+        pointsToNairaRate: 1,
+        defaultUserRole: "user",
+        maintenanceMode: false,
+        registrationEnabled: true
+      };
+      
+      res.json(settings);
+    } catch (error) {
+      console.error("Error fetching admin settings:", error);
+      res.status(500).json({ message: "Failed to fetch settings" });
+    }
+  });
+
+  app.put('/api/admin/settings', isAuthenticated, isAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const settings = req.body;
+      
+      // In production, you would save these settings to a database table
+      // For now, we'll just return success
+      
+      res.json({ message: "Settings updated successfully", settings });
+    } catch (error) {
+      console.error("Error updating admin settings:", error);
+      res.status(500).json({ message: "Failed to update settings" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

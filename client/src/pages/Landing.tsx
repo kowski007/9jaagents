@@ -28,11 +28,14 @@ import {
   Filter
 } from "lucide-react";
 import AgentCard from "@/components/AgentCard";
+import Layout from "@/components/Layout";
+import { useAuth } from "@/hooks/useAuth";
 
 export default function Landing() {
   const [location, setLocation] = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+  const { user, isAuthenticated } = useAuth();
 
   // Parse URL params
   const searchParams = new URLSearchParams(location.split('?')[1] || '');
@@ -78,28 +81,8 @@ export default function Landing() {
   const featuredAgents = agents.slice(0, 8);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-blue-900 dark:to-indigo-900">
-      {/* Header */}
-      <header className="border-b bg-white/80 backdrop-blur-sm dark:bg-slate-900/80 sticky top-0 z-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center h-16">
-            <div className="flex items-center space-x-2">
-              <Bot className="h-8 w-8 text-blue-600" />
-              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                AgentMarket
-              </span>
-            </div>
-            <div className="flex items-center space-x-4">
-              <Button 
-                onClick={() => window.location.href = '/api/login'}
-                className="bg-blue-600 hover:bg-blue-700 text-white"
-              >
-                Get Started
-              </Button>
-            </div>
-          </div>
-        </div>
-      </header>
+    <Layout>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-blue-900 dark:to-indigo-900">
 
       {/* Hero Section with Search */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
@@ -442,6 +425,7 @@ export default function Landing() {
           </div>
         </div>
       </footer>
-    </div>
+      </div>
+    </Layout>
   );
 }
