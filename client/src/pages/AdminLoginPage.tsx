@@ -58,16 +58,19 @@ export default function AdminLoginPage() {
           const userData = await userResponse.json();
           if (userData.role === 'admin') {
             showSuccess('Admin login successful');
-            setLocation('/admin');
+            window.location.href = '/admin'; // Force full page reload for admin
           } else {
             showError('Access denied. Admin privileges required.');
           }
+        } else {
+          showError('Failed to verify admin status');
         }
       } else {
         const error = await response.json();
-        showError(error.message || 'Login failed');
+        showError(error.message || 'Invalid credentials');
       }
     } catch (error) {
+      console.error('Login error:', error);
       showError('Network error. Please try again.');
     } finally {
       setIsLoading(false);
