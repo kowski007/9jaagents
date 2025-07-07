@@ -231,6 +231,16 @@ export default function ListAgent() {
               </div>
 
               <div>
+                <Label htmlFor="demoUrl">Demo URL</Label>
+                <Input
+                  id="demoUrl"
+                  value={formData.demoUrl || ''}
+                  onChange={(e) => setFormData(prev => ({ ...prev, demoUrl: e.target.value }))}
+                  placeholder="https://your-demo-link.com"
+                />
+              </div>
+
+              <div>
                 <Label>Tags</Label>
                 <div className="flex gap-2 mb-2">
                   <Input
@@ -250,6 +260,99 @@ export default function ListAgent() {
                       <X className="h-3 w-3 cursor-pointer" onClick={() => removeTag(tag)} />
                     </Badge>
                   ))}
+                </div>
+              </div>
+
+              {/* Use Cases Section */}
+              <div>
+                <Label>Use Cases</Label>
+                <div className="space-y-3">
+                  {formData.useCases?.map((useCase, index) => (
+                    <Card key={index} className="p-4">
+                      <div className="flex justify-between items-start mb-2">
+                        <Input
+                          placeholder="Use case title"
+                          value={useCase.title}
+                          onChange={(e) => {
+                            const updated = [...(formData.useCases || [])];
+                            updated[index] = { ...useCase, title: e.target.value };
+                            setFormData(prev => ({ ...prev, useCases: updated }));
+                          }}
+                          className="mr-2"
+                        />
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => {
+                            const updated = (formData.useCases || []).filter((_, i) => i !== index);
+                            setFormData(prev => ({ ...prev, useCases: updated }));
+                          }}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                      <Textarea
+                        placeholder="Describe this use case..."
+                        value={useCase.description}
+                        onChange={(e) => {
+                          const updated = [...(formData.useCases || [])];
+                          updated[index] = { ...useCase, description: e.target.value };
+                          setFormData(prev => ({ ...prev, useCases: updated }));
+                        }}
+                        rows={2}
+                      />
+                    </Card>
+                  ))}
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      const updated = [...(formData.useCases || []), { title: '', description: '' }];
+                      setFormData(prev => ({ ...prev, useCases: updated }));
+                    }}
+                  >
+                    <Plus className="h-4 w-4 mr-2" />
+                    Add Use Case
+                  </Button>
+                </div>
+              </div>
+
+              {/* Technical Specifications */}
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                  <Label htmlFor="supportedFormats">Supported Formats</Label>
+                  <Input
+                    id="supportedFormats"
+                    placeholder="JSON, CSV, XML (comma separated)"
+                    onChange={(e) => {
+                      const formats = e.target.value.split(',').map(f => f.trim()).filter(Boolean);
+                      setFormData(prev => ({ ...prev, supportedFormats: formats }));
+                    }}
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="integrations">Integrations</Label>
+                  <Input
+                    id="integrations"
+                    placeholder="Slack, Discord, API (comma separated)"
+                    onChange={(e) => {
+                      const integrations = e.target.value.split(',').map(f => f.trim()).filter(Boolean);
+                      setFormData(prev => ({ ...prev, integrations: integrations }));
+                    }}
+                  />
+                </div>
+                <div>
+                  <Label>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        checked={formData.apiEndpoints || false}
+                        onChange={(e) => setFormData(prev => ({ ...prev, apiEndpoints: e.target.checked }))}
+                      />
+                      <span>Includes API Access</span>
+                    </div>
+                  </Label>
                 </div>
               </div>
 

@@ -163,26 +163,88 @@ export default function AgentDetailModal({ agent, seller, isOpen, onClose }: Age
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           <div className="lg:col-span-2">
+            {/* Video/Demo Section */}
+            {agent.demoUrl && (
+              <div className="mb-8">
+                <h3 className="text-xl font-semibold text-secondary mb-4">Demo & Preview</h3>
+                <div className="aspect-video bg-gray-100 rounded-lg flex items-center justify-center mb-4">
+                  <Button 
+                    onClick={() => window.open(agent.demoUrl, '_blank')}
+                    className="flex items-center space-x-2"
+                  >
+                    <span>▶</span>
+                    <span>View Live Demo</span>
+                  </Button>
+                </div>
+              </div>
+            )}
+
             <h3 className="text-xl font-semibold text-secondary mb-4">About This Agent</h3>
             <p className="text-gray-600 mb-6">{agent.description}</p>
 
+            {/* Key Features */}
             {agent.features && agent.features.length > 0 && (
-              <>
-                <h4 className="text-lg font-semibold text-secondary mb-3">What You Get:</h4>
-                <ul className="list-disc list-inside space-y-2 text-gray-600 mb-6">
+              <div className="mb-8">
+                <h4 className="text-lg font-semibold text-secondary mb-4">Key Features</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                   {agent.features.map((feature, index) => (
-                    <li key={index}>{feature}</li>
+                    <div key={index} className="flex items-center space-x-2 p-3 bg-green-50 rounded-lg">
+                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                      <span className="text-gray-700">{feature}</span>
+                    </div>
                   ))}
-                </ul>
-              </>
+                </div>
+              </div>
+            )}
+
+            {/* Use Cases */}
+            {agent.useCases && agent.useCases.length > 0 && (
+              <div className="mb-8">
+                <h4 className="text-lg font-semibold text-secondary mb-4">Perfect For</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {agent.useCases.map((useCase, index) => (
+                    <Card key={index} className="p-4 border-l-4 border-blue-500">
+                      <h5 className="font-semibold text-gray-800 mb-2">{useCase.title}</h5>
+                      <p className="text-sm text-gray-600">{useCase.description}</p>
+                    </Card>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Technical Specifications */}
+            {(agent.apiEndpoints || agent.supportedFormats || agent.integrations) && (
+              <div className="mb-8">
+                <h4 className="text-lg font-semibold text-secondary mb-4">Technical Details</h4>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  {agent.apiEndpoints && (
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h5 className="font-semibold text-gray-800 mb-2">API Access</h5>
+                      <p className="text-sm text-gray-600">REST API included</p>
+                    </div>
+                  )}
+                  {agent.supportedFormats && (
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h5 className="font-semibold text-gray-800 mb-2">Supported Formats</h5>
+                      <p className="text-sm text-gray-600">{agent.supportedFormats.join(', ')}</p>
+                    </div>
+                  )}
+                  {agent.integrations && (
+                    <div className="p-4 bg-gray-50 rounded-lg">
+                      <h5 className="font-semibold text-gray-800 mb-2">Integrations</h5>
+                      <p className="text-sm text-gray-600">{agent.integrations.join(', ')}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
             )}
 
             {agent.tags && agent.tags.length > 0 && (
-              <div className="mb-6">
-                <h4 className="text-lg font-semibold text-secondary mb-3">Tags:</h4>
+              <div className="mb-8">
+                <h4 className="text-lg font-semibold text-secondary mb-3">Categories:</h4>
                 <div className="flex flex-wrap gap-2">
                   {agent.tags.map((tag, index) => (
-                    <Badge key={index} variant="secondary">
+                    <Badge key={index} variant="outline" className="border-primary text-primary">
                       {tag}
                     </Badge>
                   ))}
