@@ -1529,6 +1529,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: "Minimum withdrawal must be at least ₦100" });
       }
       
+      if (settings.maxWithdrawal && settings.maxWithdrawal < settings.minWithdrawal) {
+        return res.status(400).json({ message: "Maximum withdrawal must be greater than minimum withdrawal" });
+      }
+      
+      if (settings.pointsToNairaRate && settings.pointsToNairaRate <= 0) {
+        return res.status(400).json({ message: "Points to Naira rate must be greater than 0" });
+      }
+      
+      if (settings.maxUploadSize && (settings.maxUploadSize < 1 || settings.maxUploadSize > 100)) {
+        return res.status(400).json({ message: "Max upload size must be between 1 and 100 MB" });
+      }
+      
+      if (settings.supportEmail && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(settings.supportEmail)) {
+        return res.status(400).json({ message: "Invalid support email format" });
+      }
+      
       // In production, save to database
       console.log("Settings updated:", settings);
       

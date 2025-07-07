@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/hooks/useAuth";
 import Layout from "@/components/Layout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +8,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Switch } from "@/components/ui/switch";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { 
   Users, 
   Bot, 
@@ -29,12 +32,15 @@ import {
   Plus,
   Eye,
   Edit,
-  Trash2
+  Trash2,
+  Save,
+  Settings
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface DashboardStats {
   totalUsers: number;
@@ -45,6 +51,362 @@ interface DashboardStats {
   activeAgents: number;
   userGrowth: number;
   revenueGrowth: number;
+}
+
+interface PlatformSettings {
+  siteName: string;
+  commissionRate: number;
+  minWithdrawal: number;
+  maxWithdrawal: number;
+  pointsToNairaRate: number;
+  defaultUserRole: string;
+  maintenanceMode: boolean;
+  registrationEnabled: boolean;
+  autoApproveAgents: boolean;
+  emailNotifications: boolean;
+  maxUploadSize: number;
+  supportEmail: string;
+}
+
+function PlatformSettingsForm() {
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+  const [hasChanges, setHasChanges] = useState(false);
+
+  const { data: settings, isLoading } = useQuery<PlatformSettings>({
+    queryKey: ['/api/admin/settings'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/settings');
+      if (!response.ok) throw new Error('Failed to fetch settings');
+      return response.json();
+    },
+  });
+
+  const [formData, setFormData] = useState<PlatformSettings>({
+    siteName: "AgentMarket",
+    commissionRate: 10,
+    minWithdrawal: 1000,
+    maxWithdrawal: 500000,
+    pointsToNairaRate: 1,
+    defaultUserRole: "user",
+    maintenanceMode: false,
+    registrationEnabled: true,
+    autoApproveAgents: false,
+    emailNotifications: true,
+    maxUploadSize: 10,
+    supportEmail: "support@agentmarket.com"
+  });
+
+  // Update form data when settings are loaded
+  useState(() => {
+    if (settings) {
+      setFormData(settings);
+    }
+  }, [settings]);
+
+  const updateSettingsMutation = useMutation({
+    mutationFn: async (data: PlatformSettings) => {
+      const response = await fetch('/api/admin/settings', {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(data),
+      });
+      if (!response.ok) throw new Error('Failed to update settings');
+      return response.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['/api/admin/settings'] });
+      setHasChanges(false);
+      toast({
+        title: "Settings Updated",
+        description: "Platform settings have been successfully updated.",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update settings. Please try again.",
+        variant: "destructive",
+      });
+    },
+  });
+
+  const handleInputChange = (field: keyof PlatformSettings, value: any) => {
+    setFormData(prev => ({ ...prev, [field]: value }));
+    setHasChanges(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateSettingsMutation.mutate(formData);
+  };
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center p-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-600"></div>
+      </div>
+    );
+  }
+
+  return (
+    <form onSubmit={handleSubmit} className="space-y-8">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Commission Settings */}
+        <Card className="border-purple-200">
+          <CardHeader className="bg-gradient-to-r from-purple-50 to-violet-50">
+            <CardTitle className="flex items-center text-purple-900">
+              <DollarSign className="h-5 w-5 mr-2" />
+              Commission Settings
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 space-y-4">
+            <div>
+              <Label htmlFor="commissionRate" className="text-sm font-medium text-gray-700">
+                Platform Fee (%)
+              </Label>
+              <Input
+                id="commissionRate"
+                type="number"
+                min="1"
+                max="50"
+                value={formData.commissionRate}
+                onChange={(e) => handleInputChange('commissionRate', parseInt(e.target.value))}
+                className="mt-2"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Current: {formData.commissionRate}% commission on all transactions
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="minWithdrawal" className="text-sm font-medium text-gray-700">
+                Minimum Payout (₦)
+              </Label>
+              <Input
+                id="minWithdrawal"
+                type="number"
+                min="100"
+                value={formData.minWithdrawal}
+                onChange={(e) => handleInputChange('minWithdrawal', parseInt(e.target.value))}
+                className="mt-2"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Minimum amount sellers can withdraw
+              </p>
+            </div>
+            <div>
+              <Label htmlFor="maxWithdrawal" className="text-sm font-medium text-gray-700">
+                Maximum Withdrawal (₦)
+              </Label>
+              <Input
+                id="maxWithdrawal"
+                type="number"
+                min="1000"
+                value={formData.maxWithdrawal}
+                onChange={(e) => handleInputChange('maxWithdrawal', parseInt(e.target.value))}
+                className="mt-2"
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Maximum amount per withdrawal request
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+
+        {/* Platform Status */}
+        <Card className="border-purple-200">
+          <CardHeader className="bg-gradient-to-r from-purple-50 to-violet-50">
+            <CardTitle className="flex items-center text-purple-900">
+              <Settings className="h-5 w-5 mr-2" />
+              Platform Status
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="p-6 space-y-4">
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div>
+                <Label className="text-sm font-medium text-gray-700">
+                  Maintenance Mode
+                </Label>
+                <p className="text-xs text-gray-500">
+                  Temporarily disable public access
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={formData.maintenanceMode}
+                  onCheckedChange={(checked) => handleInputChange('maintenanceMode', checked)}
+                />
+                <Badge variant={formData.maintenanceMode ? "destructive" : "default"}>
+                  {formData.maintenanceMode ? "On" : "Off"}
+                </Badge>
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div>
+                <Label className="text-sm font-medium text-gray-700">
+                  Registration
+                </Label>
+                <p className="text-xs text-gray-500">
+                  Allow new user registrations
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={formData.registrationEnabled}
+                  onCheckedChange={(checked) => handleInputChange('registrationEnabled', checked)}
+                />
+                <Badge variant={formData.registrationEnabled ? "default" : "destructive"}>
+                  {formData.registrationEnabled ? "Open" : "Closed"}
+                </Badge>
+              </div>
+            </div>
+
+            <div className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
+              <div>
+                <Label className="text-sm font-medium text-gray-700">
+                  Auto-approve Agents
+                </Label>
+                <p className="text-xs text-gray-500">
+                  Automatically approve new agent listings
+                </p>
+              </div>
+              <div className="flex items-center space-x-2">
+                <Switch
+                  checked={formData.autoApproveAgents}
+                  onCheckedChange={(checked) => handleInputChange('autoApproveAgents', checked)}
+                />
+                <Badge variant={formData.autoApproveAgents ? "default" : "secondary"}>
+                  {formData.autoApproveAgents ? "On" : "Off"}
+                </Badge>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+
+      {/* Additional Settings */}
+      <Card className="border-purple-200">
+        <CardHeader className="bg-gradient-to-r from-purple-50 to-violet-50">
+          <CardTitle className="flex items-center text-purple-900">
+            <Shield className="h-5 w-5 mr-2" />
+            Additional Settings
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="p-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <div>
+              <Label htmlFor="siteName" className="text-sm font-medium text-gray-700">
+                Site Name
+              </Label>
+              <Input
+                id="siteName"
+                value={formData.siteName}
+                onChange={(e) => handleInputChange('siteName', e.target.value)}
+                className="mt-2"
+              />
+            </div>
+            <div>
+              <Label htmlFor="pointsToNairaRate" className="text-sm font-medium text-gray-700">
+                Points to Naira Rate
+              </Label>
+              <Input
+                id="pointsToNairaRate"
+                type="number"
+                step="0.01"
+                min="0.01"
+                value={formData.pointsToNairaRate}
+                onChange={(e) => handleInputChange('pointsToNairaRate', parseFloat(e.target.value))}
+                className="mt-2"
+              />
+            </div>
+            <div>
+              <Label htmlFor="defaultUserRole" className="text-sm font-medium text-gray-700">
+                Default User Role
+              </Label>
+              <Select
+                value={formData.defaultUserRole}
+                onValueChange={(value) => handleInputChange('defaultUserRole', value)}
+              >
+                <SelectTrigger className="mt-2">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="user">User</SelectItem>
+                  <SelectItem value="seller">Seller</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div>
+              <Label htmlFor="maxUploadSize" className="text-sm font-medium text-gray-700">
+                Max Upload Size (MB)
+              </Label>
+              <Input
+                id="maxUploadSize"
+                type="number"
+                min="1"
+                max="100"
+                value={formData.maxUploadSize}
+                onChange={(e) => handleInputChange('maxUploadSize', parseInt(e.target.value))}
+                className="mt-2"
+              />
+            </div>
+            <div>
+              <Label htmlFor="supportEmail" className="text-sm font-medium text-gray-700">
+                Support Email
+              </Label>
+              <Input
+                id="supportEmail"
+                type="email"
+                value={formData.supportEmail}
+                onChange={(e) => handleInputChange('supportEmail', e.target.value)}
+                className="mt-2"
+              />
+            </div>
+            <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
+              <Switch
+                checked={formData.emailNotifications}
+                onCheckedChange={(checked) => handleInputChange('emailNotifications', checked)}
+              />
+              <Label className="text-sm font-medium text-gray-700">
+                Email Notifications
+              </Label>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Save Button */}
+      <div className="flex items-center justify-between p-4 bg-gradient-to-r from-purple-50 to-violet-50 rounded-lg border border-purple-200">
+        <div className="flex items-center space-x-2">
+          {hasChanges && (
+            <Badge variant="outline" className="text-orange-600 border-orange-200">
+              Unsaved Changes
+            </Badge>
+          )}
+        </div>
+        <Button 
+          type="submit" 
+          disabled={!hasChanges || updateSettingsMutation.isPending}
+          className="bg-gradient-purple hover:opacity-90 text-white px-8"
+        >
+          {updateSettingsMutation.isPending ? (
+            <>
+              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+              Saving...
+            </>
+          ) : (
+            <>
+              <Save className="h-4 w-4 mr-2" />
+              Save Settings
+            </>
+          )}
+        </Button>
+      </div>
+    </form>
+  );
 }
 
 export default function AdminDashboard() {
@@ -788,36 +1150,7 @@ export default function AdminDashboard() {
                   </CardDescription>
                 </CardHeader>
                 <CardContent className="p-6">
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="bg-gray-50 p-6 rounded-xl">
-                        <h3 className="font-semibold text-gray-900 mb-4">Commission Settings</h3>
-                        <div className="space-y-3">
-                          <div className="flex justify-between">
-                            <span className="text-sm text-gray-600">Platform Fee</span>
-                            <span className="font-medium">10%</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm text-gray-600">Minimum Payout</span>
-                            <span className="font-medium">$100</span>
-                          </div>
-                        </div>
-                      </div>
-                      <div className="bg-gray-50 p-6 rounded-xl">
-                        <h3 className="font-semibold text-gray-900 mb-4">Platform Status</h3>
-                        <div className="space-y-3">
-                          <div className="flex justify-between">
-                            <span className="text-sm text-gray-600">Maintenance Mode</span>
-                            <Badge variant="default">Off</Badge>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-sm text-gray-600">Registration</span>
-                            <Badge variant="default">Open</Badge>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
+                  <PlatformSettingsForm />
                 </CardContent>
               </Card>
             </TabsContent>
