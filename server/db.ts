@@ -1,4 +1,3 @@
-
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import { 
@@ -26,10 +25,10 @@ export async function initializeDatabase() {
   try {
     // Check if categories exist
     const existingCategories = await db.select().from(categories).limit(1);
-    
+
     if (existingCategories.length === 0) {
       console.log('Initializing database with sample data...');
-      
+
       // Insert categories
       const defaultCategories = [
         { name: "Writing", icon: "fas fa-pen-nib", description: "Content creation and writing services", agentCount: 0 },
@@ -39,7 +38,7 @@ export async function initializeDatabase() {
         { name: "Translation", icon: "fas fa-language", description: "Language translation services", agentCount: 0 },
         { name: "Automation", icon: "fas fa-robot", description: "Process automation and workflows", agentCount: 0 },
       ];
-      
+
       await db.insert(categories).values(defaultCategories);
       console.log('Sample categories inserted');
 
@@ -59,7 +58,7 @@ export async function initializeDatabase() {
           sellerId: sampleUserId,
           title: 'Customer Support AI Agent',
           description: 'Advanced AI agent that handles customer inquiries 24/7 with natural language processing and sentiment analysis.',
-          categoryId: 6, // Automation
+          categoryId: 6,
           basicPrice: '49.99',
           standardPrice: '99.99',
           premiumPrice: '199.99',
@@ -91,7 +90,7 @@ export async function initializeDatabase() {
           sellerId: sampleUserId,
           title: 'Content Writing Assistant',
           description: 'Professional AI writer that creates engaging blog posts, articles, and marketing copy tailored to your brand voice.',
-          categoryId: 1, // Writing
+          categoryId: 1,
           basicPrice: '29.99',
           standardPrice: '59.99',
           premiumPrice: '119.99',
@@ -122,7 +121,7 @@ export async function initializeDatabase() {
           sellerId: sampleUserId,
           title: 'Data Analytics Dashboard',
           description: 'Intelligent analytics agent that processes your data and generates actionable insights with beautiful visualizations.',
-          categoryId: 4, // Analytics
+          categoryId: 4,
           basicPrice: '79.99',
           standardPrice: '149.99',
           premiumPrice: '299.99',
