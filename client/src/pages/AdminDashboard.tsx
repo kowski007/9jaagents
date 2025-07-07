@@ -850,7 +850,7 @@ export default function AdminDashboard() {
                         <Activity className="h-5 w-5 text-blue-600" />
                       </div>
                       <div className="text-lg font-bold text-blue-700 mb-2">Connected</div>
-                      <p className="text-sm text-gray-600">Response time: <50ms</p>
+                      <p className="text-sm text-gray-600">Response time: &lt;50ms</p>
                     </div>
                     <div className="bg-purple-50 p-6 rounded-xl border border-purple-200">
                       <div className="flex items-center justify-between mb-4">
