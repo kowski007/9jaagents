@@ -1304,6 +1304,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Create default admin user (for development only)
+  app.post('/api/admin/create-default', async (req, res) => {
+    try {
+      const adminEmail = 'admin@agentmarket.com';
+      const adminPassword = 'admin123';
+      
+      // Check if admin already exists
+      const existingAdmin = await storage.getUserByEmail(adminEmail);
+      if (existingAdmin) {
+        return res.status(400).json({ message: "Default admin already exists" });
+      }
+
+      // Hash password
+      const hashedPassword = await bcrypt.hash(adminPassword, 10);
+
+      // Create admin user
+      const adminId = `admin_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+      await storage.upsertUser({
+        id: adminId,
+        email: adminEmail,
+        firstName: 'Admin',
+        lastName: 'User',
+        profileImageUrl: null,
+        hashedPassword,
+        role: 'admin',
+        isActive: true,
+      });
+
+      res.json({ 
+        message: "Default admin created successfully",
+        email: adminEmail,
+        password: adminPassword
+      });
+    } catch (error) {
+      console.error("Error creating default admin:", error);
+      res.status(500).json({ message: "Failed to create default admin" });
+    }
+  });
+
   // Super Admin Routes
   app.get('/api/admin/stats', isAuthenticated, isAdmin, async (req: AuthenticatedRequest, res) => {
     try {
