@@ -3,9 +3,10 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
-import { Star, Heart } from "lucide-react";
+import { Star, Heart, ShoppingCart } from "lucide-react";
 import { Agent, User } from "@shared/schema";
 import AgentDetailModal from "./AgentDetailModal";
+import PurchaseModal from "./PurchaseModal";
 
 interface AgentCardProps {
   agent: Agent;
@@ -14,6 +15,7 @@ interface AgentCardProps {
 
 export default function AgentCard({ agent, seller }: AgentCardProps) {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isPurchaseModalOpen, setIsPurchaseModalOpen] = useState(false);
   const [isFavorited, setIsFavorited] = useState(false);
 
   const handleFavorite = (e: React.MouseEvent) => {
@@ -106,6 +108,18 @@ export default function AgentCard({ agent, seller }: AgentCardProps) {
                 </Button>
               )}
               <Button 
+                variant="outline"
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setIsPurchaseModalOpen(true);
+                }}
+                className="flex items-center space-x-1"
+              >
+                <ShoppingCart className="h-3 w-3" />
+                <span>Buy</span>
+              </Button>
+              <Button 
                 size="sm"
                 onClick={(e) => {
                   e.stopPropagation();
@@ -124,6 +138,12 @@ export default function AgentCard({ agent, seller }: AgentCardProps) {
         seller={seller}
         isOpen={isModalOpen}
         onClose={() => setIsModalOpen(false)}
+      />
+      
+      <PurchaseModal
+        agent={agent}
+        isOpen={isPurchaseModalOpen}
+        onClose={() => setIsPurchaseModalOpen(false)}
       />
     </>
   );

@@ -881,6 +881,429 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Wallet routes
+  app.get('/api/wallet', isAuthenticated, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user!.claims.sub;
+      let wallet = await storage.getWallet(userId);
+      
+      // Create wallet if it doesn't exist
+      if (!wallet) {
+        wallet = await storage.createWallet({ userId });
+      }
+      
+      res.json(wallet);
+    } catch (error) {
+      console.error("Error fetching wallet:", error);
+      res.status(500).json({ message: "Failed to fetch wallet" });
+    }
+  });
+
+  app.get('/api/wallet/transactions', isAuthenticated, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user!.claims.sub;
+      const limit = req.query.limit ? parseInt(req.query.limit as string) : 50;
+      
+      const transactions = await storage.getWalletTransactions(userId, limit);
+      res.json(transactions);
+    } catch (error) {
+      console.error("Error fetching wallet transactions:", error);
+      res.status(500).json({ message: "Failed to fetch transactions" });
+    }
+  });
+
+  app.post('/api/wallet/deposit', isAuthenticated, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user!.claims.sub;
+      const { amount } = req.body;
+      
+      if (!amount || amount <= 0) {
+        return res.status(400).json({ message: "Invalid amount" });
+      }
+      
+      // Create Paystack payment
+      const paystackResponse = await fetch('https://api.paystack.co/transaction/initialize', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          email: req.user!.claims.email,
+          amount: amount * 100, // Convert to kobo
+          callback_url: `${process.env.BASE_URL || 'http://localhost:5000'}/api/wallet/deposit/callback`,
+          metadata: {
+            user_id: userId,
+            type: 'deposit'
+          }
+        })
+      });
+      
+      const paystackData = await paystackResponse.json();
+      
+      if (!paystackData.status) {
+        return res.status(400).json({ message: "Payment initialization failed" });
+      }
+      
+      res.json({
+        authorization_url: paystackData.data.authorization_url,
+        reference: paystackData.data.reference
+      });
+    } catch (error) {
+      console.error("Error initiating deposit:", error);
+      res.status(500).json({ message: "Failed to initiate deposit" });
+    }
+  });
+
+  app.post('/api/wallet/deposit/callback', async (req, res) => {
+    try {
+      const { reference } = req.body;
+      
+      // Verify payment with Paystack
+      const verifyResponse = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
+        headers: {
+          'Authorization': `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+        }
+      });
+      
+      const verifyData = await verifyResponse.json();
+      
+      if (verifyData.status && verifyData.data.status === 'success') {
+        const { amount, metadata } = verifyData.data;
+        const userId = metadata.user_id;
+        const amountInNaira = amount / 100;
+        
+        // Get or create wallet
+        let wallet = await storage.getWallet(userId);
+        if (!wallet) {
+          wallet = await storage.createWallet({ userId });
+        }
+        
+        // Update wallet balance
+        await storage.updateWalletBalance(userId, amountInNaira);
+        
+        // Add transaction record
+        await storage.addWalletTransaction({
+          walletId: wallet.id,
+          type: 'deposit',
+          amount: amountInNaira.toString(),
+          description: 'Wallet deposit via Paystack',
+          reference: reference,
+          status: 'success',
+          metadata: { payment_method: 'paystack' }
+        });
+        
+        res.json({ message: "Deposit successful", amount: amountInNaira });
+      } else {
+        res.status(400).json({ message: "Payment verification failed" });
+      }
+    } catch (error) {
+      console.error("Error processing deposit callback:", error);
+      res.status(500).json({ message: "Failed to process deposit" });
+    }
+  });
+
+  app.post('/api/wallet/withdraw', isAuthenticated, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user!.claims.sub;
+      const { amount, bankName, accountNumber, accountName } = req.body;
+      
+      if (!amount || amount <= 0 || !bankName || !accountNumber || !accountName) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      // Check wallet balance
+      const wallet = await storage.getWallet(userId);
+      if (!wallet || parseFloat(wallet.balance) < amount) {
+        return res.status(400).json({ message: "Insufficient wallet balance" });
+      }
+      
+      // Create withdrawal request
+      const withdrawalRequest = await storage.createWithdrawalRequest({
+        userId,
+        amount: amount.toString(),
+        bankName,
+        accountNumber,
+        accountName
+      });
+      
+      // Deduct from wallet (pending approval)
+      await storage.updateWalletBalance(userId, -amount);
+      
+      // Add transaction record
+      await storage.addWalletTransaction({
+        walletId: wallet.id,
+        type: 'withdrawal',
+        amount: amount.toString(),
+        description: 'Withdrawal request submitted',
+        reference: `WR-${withdrawalRequest.id}`,
+        status: 'pending',
+        metadata: { 
+          withdrawal_request_id: withdrawalRequest.id,
+          bank_name: bankName,
+          account_number: accountNumber,
+          account_name: accountName
+        }
+      });
+      
+      res.json({ message: "Withdrawal request submitted", request: withdrawalRequest });
+    } catch (error) {
+      console.error("Error processing withdrawal:", error);
+      res.status(500).json({ message: "Failed to process withdrawal" });
+    }
+  });
+
+  app.get('/api/wallet/withdrawals', isAuthenticated, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user!.claims.sub;
+      const withdrawals = await storage.getWithdrawalRequests(userId);
+      res.json(withdrawals);
+    } catch (error) {
+      console.error("Error fetching withdrawals:", error);
+      res.status(500).json({ message: "Failed to fetch withdrawals" });
+    }
+  });
+
+  // Agent purchase with wallet
+  app.post('/api/agents/:id/purchase', isAuthenticated, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user!.claims.sub;
+      const agentId = parseInt(req.params.id);
+      const { tier, paymentMethod } = req.body; // 'wallet' or 'paystack'
+      
+      const agent = await storage.getAgent(agentId);
+      if (!agent) {
+        return res.status(404).json({ message: "Agent not found" });
+      }
+      
+      // Calculate price based on tier
+      let price = 0;
+      if (tier === 'basic') price = parseFloat(agent.basicPrice);
+      else if (tier === 'standard') price = parseFloat(agent.standardPrice || '0');
+      else if (tier === 'premium') price = parseFloat(agent.premiumPrice || '0');
+      
+      if (price <= 0) {
+        return res.status(400).json({ message: "Invalid tier selected" });
+      }
+      
+      if (paymentMethod === 'wallet') {
+        // Pay with wallet
+        const wallet = await storage.getWallet(userId);
+        if (!wallet || parseFloat(wallet.balance) < price) {
+          return res.status(400).json({ message: "Insufficient wallet balance" });
+        }
+        
+        // Create order
+        const order = await storage.createOrder({
+          buyerId: userId,
+          sellerId: agent.sellerId,
+          agentId: agentId,
+          tier: tier,
+          amount: price.toString(),
+          status: 'paid'
+        });
+        
+        // Deduct from buyer wallet
+        await storage.updateWalletBalance(userId, -price);
+        
+        // Add to seller wallet (minus commission)
+        const commission = price * 0.1; // 10% commission
+        const sellerAmount = price - commission;
+        
+        let sellerWallet = await storage.getWallet(agent.sellerId);
+        if (!sellerWallet) {
+          sellerWallet = await storage.createWallet({ userId: agent.sellerId });
+        }
+        
+        await storage.updateWalletBalance(agent.sellerId, sellerAmount);
+        
+        // Record transactions
+        await storage.addWalletTransaction({
+          walletId: wallet.id,
+          type: 'purchase',
+          amount: price.toString(),
+          description: `Purchased ${agent.title} (${tier})`,
+          reference: `ORDER-${order.id}`,
+          status: 'success',
+          metadata: { order_id: order.id, agent_id: agentId, tier }
+        });
+        
+        await storage.addWalletTransaction({
+          walletId: sellerWallet.id,
+          type: 'sale',
+          amount: sellerAmount.toString(),
+          description: `Sale of ${agent.title} (${tier})`,
+          reference: `ORDER-${order.id}`,
+          status: 'success',
+          metadata: { order_id: order.id, agent_id: agentId, tier }
+        });
+        
+        // Record admin commission
+        await storage.createAdminCommission({
+          orderId: order.id,
+          amount: commission.toString(),
+          percentage: '10.00'
+        });
+        
+        res.json({ message: "Purchase successful", order });
+      } else {
+        // Pay with Paystack
+        const paystackResponse = await fetch('https://api.paystack.co/transaction/initialize', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            email: req.user!.claims.email,
+            amount: price * 100,
+            callback_url: `${process.env.BASE_URL || 'http://localhost:5000'}/api/agents/purchase/callback`,
+            metadata: {
+              user_id: userId,
+              agent_id: agentId,
+              tier: tier,
+              type: 'purchase'
+            }
+          })
+        });
+        
+        const paystackData = await paystackResponse.json();
+        
+        if (!paystackData.status) {
+          return res.status(400).json({ message: "Payment initialization failed" });
+        }
+        
+        res.json({
+          authorization_url: paystackData.data.authorization_url,
+          reference: paystackData.data.reference
+        });
+      }
+    } catch (error) {
+      console.error("Error processing agent purchase:", error);
+      res.status(500).json({ message: "Failed to process purchase" });
+    }
+  });
+
+  app.post('/api/agents/purchase/callback', async (req, res) => {
+    try {
+      const { reference } = req.body;
+      
+      // Verify payment with Paystack
+      const verifyResponse = await fetch(`https://api.paystack.co/transaction/verify/${reference}`, {
+        headers: {
+          'Authorization': `Bearer ${process.env.PAYSTACK_SECRET_KEY}`,
+        }
+      });
+      
+      const verifyData = await verifyResponse.json();
+      
+      if (verifyData.status && verifyData.data.status === 'success') {
+        const { amount, metadata } = verifyData.data;
+        const { user_id: userId, agent_id: agentId, tier } = metadata;
+        const price = amount / 100;
+        
+        const agent = await storage.getAgent(parseInt(agentId));
+        if (!agent) {
+          return res.status(404).json({ message: "Agent not found" });
+        }
+        
+        // Create order
+        const order = await storage.createOrder({
+          buyerId: userId,
+          sellerId: agent.sellerId,
+          agentId: parseInt(agentId),
+          tier: tier,
+          amount: price.toString(),
+          status: 'paid'
+        });
+        
+        // Add to seller wallet (minus commission)
+        const commission = price * 0.1;
+        const sellerAmount = price - commission;
+        
+        let sellerWallet = await storage.getWallet(agent.sellerId);
+        if (!sellerWallet) {
+          sellerWallet = await storage.createWallet({ userId: agent.sellerId });
+        }
+        
+        await storage.updateWalletBalance(agent.sellerId, sellerAmount);
+        
+        // Record seller transaction
+        await storage.addWalletTransaction({
+          walletId: sellerWallet.id,
+          type: 'sale',
+          amount: sellerAmount.toString(),
+          description: `Sale of ${agent.title} (${tier})`,
+          reference: reference,
+          status: 'success',
+          metadata: { order_id: order.id, agent_id: agentId, tier, payment_method: 'paystack' }
+        });
+        
+        // Record admin commission
+        await storage.createAdminCommission({
+          orderId: order.id,
+          amount: commission.toString(),
+          percentage: '10.00'
+        });
+        
+        res.json({ message: "Purchase successful", order });
+      } else {
+        res.status(400).json({ message: "Payment verification failed" });
+      }
+    } catch (error) {
+      console.error("Error processing purchase callback:", error);
+      res.status(500).json({ message: "Failed to process purchase" });
+    }
+  });
+
+  // Admin commission routes
+  app.get('/api/admin/commissions', isAuthenticated, isAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const status = req.query.status as string | undefined;
+      const commissions = await storage.getAdminCommissions(status);
+      res.json(commissions);
+    } catch (error) {
+      console.error("Error fetching admin commissions:", error);
+      res.status(500).json({ message: "Failed to fetch commissions" });
+    }
+  });
+
+  app.post('/api/admin/commissions/:id/collect', isAuthenticated, isAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const commissionId = parseInt(req.params.id);
+      const commission = await storage.collectAdminCommission(commissionId);
+      res.json(commission);
+    } catch (error) {
+      console.error("Error collecting commission:", error);
+      res.status(500).json({ message: "Failed to collect commission" });
+    }
+  });
+
+  // Admin withdrawal management
+  app.get('/api/admin/withdrawals', isAuthenticated, isAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const status = req.query.status as string | undefined;
+      const withdrawals = await storage.getWithdrawalRequests(undefined, status);
+      res.json(withdrawals);
+    } catch (error) {
+      console.error("Error fetching admin withdrawals:", error);
+      res.status(500).json({ message: "Failed to fetch withdrawals" });
+    }
+  });
+
+  app.put('/api/admin/withdrawals/:id', isAuthenticated, isAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const withdrawalId = parseInt(req.params.id);
+      const { status, adminNotes } = req.body;
+      
+      const withdrawal = await storage.updateWithdrawalStatus(withdrawalId, status, adminNotes);
+      res.json(withdrawal);
+    } catch (error) {
+      console.error("Error updating withdrawal:", error);
+      res.status(500).json({ message: "Failed to update withdrawal" });
+    }
+  });
+
   const httpServer = createServer(app);
   return httpServer;
 }

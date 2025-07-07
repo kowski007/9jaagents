@@ -210,6 +210,54 @@ export const notifications = pgTable("notifications", {
   createdAt: timestamp("created_at").defaultNow(),
 });
 
+// Wallet system tables
+export const wallets = pgTable("wallets", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  balance: decimal("balance", { precision: 10, scale: 2 }).default("0").notNull(),
+  currency: varchar("currency").default("NGN").notNull(),
+  isActive: boolean("is_active").default(true),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const walletTransactions = pgTable("wallet_transactions", {
+  id: serial("id").primaryKey(),
+  walletId: integer("wallet_id").notNull().references(() => wallets.id),
+  type: varchar("type").notNull(), // deposit, withdrawal, purchase, sale, commission, refund
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  description: text("description").notNull(),
+  reference: varchar("reference").unique(), // Paystack reference or internal ref
+  status: varchar("status").default("pending"), // pending, success, failed, cancelled
+  metadata: jsonb("metadata"), // Additional transaction data
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const withdrawalRequests = pgTable("withdrawal_requests", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  bankName: text("bank_name").notNull(),
+  accountNumber: text("account_number").notNull(),
+  accountName: text("account_name").notNull(),
+  status: varchar("status").default("pending"), // pending, approved, rejected, processed
+  adminNotes: text("admin_notes"),
+  processedAt: timestamp("processed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow(),
+});
+
+export const adminCommissions = pgTable("admin_commissions", {
+  id: serial("id").primaryKey(),
+  orderId: integer("order_id").notNull().references(() => orders.id),
+  amount: decimal("amount", { precision: 10, scale: 2 }).notNull(),
+  percentage: decimal("percentage", { precision: 5, scale: 2 }).notNull(),
+  status: varchar("status").default("pending"), // pending, collected
+  collectedAt: timestamp("collected_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertCategorySchema = createInsertSchema(categories).omit({ id: true, createdAt: true });
 export const insertAgentSchema = createInsertSchema(agents).omit({ id: true, createdAt: true, updatedAt: true });
@@ -223,6 +271,10 @@ export const insertUserReferralSchema = createInsertSchema(userReferrals).omit({
 export const insertDailyLoginSchema = createInsertSchema(dailyLogins).omit({ id: true, createdAt: true });
 export const insertPointsExchangeSchema = createInsertSchema(pointsExchange).omit({ id: true, createdAt: true, processedAt: true });
 export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true });
+export const insertWalletSchema = createInsertSchema(wallets).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertWalletTransactionSchema = createInsertSchema(walletTransactions).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertWithdrawalRequestSchema = createInsertSchema(withdrawalRequests).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertAdminCommissionSchema = createInsertSchema(adminCommissions).omit({ id: true, createdAt: true });
 
 // Types
 export type UpsertUser = {
@@ -302,3 +354,11 @@ export type InsertUserReferral = z.infer<typeof insertUserReferralSchema>;
 export type InsertDailyLogin = z.infer<typeof insertDailyLoginSchema>;
 export type InsertPointsExchange = z.infer<typeof insertPointsExchangeSchema>;
 export type InsertNotification = z.infer<typeof insertNotificationSchema>;
+export type Wallet = typeof wallets.$inferSelect;
+export type WalletTransaction = typeof walletTransactions.$inferSelect;
+export type WithdrawalRequest = typeof withdrawalRequests.$inferSelect;
+export type AdminCommission = typeof adminCommissions.$inferSelect;
+export type InsertWallet = z.infer<typeof insertWalletSchema>;
+export type InsertWalletTransaction = z.infer<typeof insertWalletTransactionSchema>;
+export type InsertWithdrawalRequest = z.infer<typeof insertWithdrawalRequestSchema>;
+export type InsertAdminCommission = z.infer<typeof insertAdminCommissionSchema>;

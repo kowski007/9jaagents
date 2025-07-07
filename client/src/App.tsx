@@ -23,6 +23,8 @@ import ImprovedMarketplace from "@/pages/ImprovedMarketplace";
 import PointsPage from "@/pages/PointsPage";
 import ReferralPage from "@/pages/ReferralPage";
 import LeaderboardPage from "@/pages/LeaderboardPage";
+import WalletPage from "@/pages/WalletPage";
+import SellerWalletPage from "@/pages/SellerWalletPage";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -45,6 +47,8 @@ function Router() {
         <Route path="/points" component={PointsPage} />
         <Route path="/referrals" component={ReferralPage} />
         <Route path="/leaderboard" component={LeaderboardPage} />
+        <Route path="/wallet" component={WalletPage} />
+        <Route path="/seller-wallet" component={SellerWalletPage} />
         <Route component={NotFound} />
       </Switch>
     </>

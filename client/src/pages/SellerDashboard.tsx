@@ -22,7 +22,8 @@ import {
   User,
   Activity,
   Coins,
-  Users
+  Users,
+  Wallet
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToastEnhanced } from "@/hooks/useToastEnhanced";
@@ -178,6 +179,14 @@ export default function SellerDashboard() {
                     >
                       <Users className="mr-3 h-4 w-4" />
                       Referrals
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start"
+                      onClick={() => setLocation('/seller-wallet')}
+                    >
+                      <Wallet className="mr-3 h-4 w-4" />
+                      My Wallet
                     </Button>
                   </nav>
                 </CardContent>

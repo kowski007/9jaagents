@@ -12,6 +12,10 @@ import {
   pointsHistory,
   notifications,
   dailyLogins,
+  wallets,
+  walletTransactions,
+  withdrawalRequests,
+  adminCommissions,
   type User,
   type UpsertUser,
   type Category,
@@ -33,6 +37,14 @@ import {
   type InsertCartItem,
   type InsertMessage,
   type InsertFavorite,
+  type Wallet,
+  type WalletTransaction,
+  type WithdrawalRequest,
+  type AdminCommission,
+  type InsertWallet,
+  type InsertWalletTransaction,
+  type InsertWithdrawalRequest,
+  type InsertAdminCommission,
 } from "@shared/schema";
 
 export interface IStorage {
@@ -93,6 +105,23 @@ export interface IStorage {
   getNotifications(userId: string): Promise<Notification[]>;
   markNotificationAsRead(notificationId: number): Promise<void>;
   markAllNotificationsAsRead(userId: string): Promise<void>;
+
+  // Wallet operations
+  getWallet(userId: string): Promise<Wallet | undefined>;
+  createWallet(wallet: InsertWallet): Promise<Wallet>;
+  updateWalletBalance(userId: string, amount: number): Promise<Wallet>;
+  addWalletTransaction(transaction: InsertWalletTransaction): Promise<WalletTransaction>;
+  getWalletTransactions(userId: string, limit?: number): Promise<WalletTransaction[]>;
+  
+  // Withdrawal operations
+  createWithdrawalRequest(request: InsertWithdrawalRequest): Promise<WithdrawalRequest>;
+  getWithdrawalRequests(userId?: string, status?: string): Promise<WithdrawalRequest[]>;
+  updateWithdrawalStatus(id: number, status: string, adminNotes?: string): Promise<WithdrawalRequest>;
+  
+  // Admin commission operations
+  createAdminCommission(commission: InsertAdminCommission): Promise<AdminCommission>;
+  getAdminCommissions(status?: string): Promise<AdminCommission[]>;
+  collectAdminCommission(id: number): Promise<AdminCommission>;
 }
 
 export class PostgreSQLStorage implements IStorage {
@@ -595,6 +624,117 @@ export class PostgreSQLStorage implements IStorage {
 
     const referralPoints = await query;
     return referralPoints.reduce((sum, point) => sum + point.points, 0);
+  }
+
+  // Wallet operations
+  async getWallet(userId: string): Promise<Wallet | undefined> {
+    const result = await db.select().from(wallets).where(eq(wallets.userId, userId));
+    return result[0];
+  }
+
+  async createWallet(walletData: InsertWallet): Promise<Wallet> {
+    const result = await db.insert(wallets).values(walletData).returning();
+    return result[0];
+  }
+
+  async updateWalletBalance(userId: string, amount: number): Promise<Wallet> {
+    const result = await db
+      .update(wallets)
+      .set({ 
+        balance: sql`${wallets.balance} + ${amount}`,
+        updatedAt: new Date()
+      })
+      .where(eq(wallets.userId, userId))
+      .returning();
+    return result[0];
+  }
+
+  async addWalletTransaction(transactionData: InsertWalletTransaction): Promise<WalletTransaction> {
+    const result = await db.insert(walletTransactions).values(transactionData).returning();
+    return result[0];
+  }
+
+  async getWalletTransactions(userId: string, limit = 50): Promise<WalletTransaction[]> {
+    const wallet = await this.getWallet(userId);
+    if (!wallet) return [];
+    
+    const result = await db
+      .select()
+      .from(walletTransactions)
+      .where(eq(walletTransactions.walletId, wallet.id))
+      .orderBy(desc(walletTransactions.createdAt))
+      .limit(limit);
+    return result;
+  }
+
+  // Withdrawal operations
+  async createWithdrawalRequest(requestData: InsertWithdrawalRequest): Promise<WithdrawalRequest> {
+    const result = await db.insert(withdrawalRequests).values(requestData).returning();
+    return result[0];
+  }
+
+  async getWithdrawalRequests(userId?: string, status?: string): Promise<WithdrawalRequest[]> {
+    let query = db.select().from(withdrawalRequests);
+    
+    if (userId) {
+      query = query.where(eq(withdrawalRequests.userId, userId));
+    }
+    
+    if (status) {
+      query = query.where(eq(withdrawalRequests.status, status));
+    }
+    
+    return query.orderBy(desc(withdrawalRequests.createdAt));
+  }
+
+  async updateWithdrawalStatus(id: number, status: string, adminNotes?: string): Promise<WithdrawalRequest> {
+    const updateData: any = { 
+      status, 
+      updatedAt: new Date() 
+    };
+    
+    if (adminNotes) {
+      updateData.adminNotes = adminNotes;
+    }
+    
+    if (status === 'processed') {
+      updateData.processedAt = new Date();
+    }
+    
+    const result = await db
+      .update(withdrawalRequests)
+      .set(updateData)
+      .where(eq(withdrawalRequests.id, id))
+      .returning();
+    return result[0];
+  }
+
+  // Admin commission operations
+  async createAdminCommission(commissionData: InsertAdminCommission): Promise<AdminCommission> {
+    const result = await db.insert(adminCommissions).values(commissionData).returning();
+    return result[0];
+  }
+
+  async getAdminCommissions(status?: string): Promise<AdminCommission[]> {
+    let query = db.select().from(adminCommissions);
+    
+    if (status) {
+      query = query.where(eq(adminCommissions.status, status));
+    }
+    
+    return query.orderBy(desc(adminCommissions.createdAt));
+  }
+
+  async collectAdminCommission(id: number): Promise<AdminCommission> {
+    const result = await db
+      .update(adminCommissions)
+      .set({ 
+        status: 'collected', 
+        collectedAt: new Date() 
+      })
+      .where(eq(adminCommissions.id, id))
+      .returning();
+    return result[0];
   }
 }
 

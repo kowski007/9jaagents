@@ -26,7 +26,8 @@ import {
   Menu,
   X,
   Coins,
-  Users
+  Users,
+  Wallet
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToastEnhanced } from "@/hooks/useToastEnhanced";
@@ -199,6 +200,17 @@ export default function Dashboard() {
         >
           <Users className="mr-3 h-4 w-4" />
           Referrals
+        </Button>
+        <Button 
+          variant="ghost" 
+          className="w-full justify-start"
+          onClick={() => {
+            setLocation('/wallet');
+            setIsMobileMenuOpen(false);
+          }}
+        >
+          <Wallet className="mr-3 h-4 w-4" />
+          My Wallet
         </Button>
         <Button 
           variant={activeTab === "settings" ? "default" : "ghost"} 
