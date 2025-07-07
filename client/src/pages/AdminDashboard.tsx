@@ -186,7 +186,7 @@ export default function AdminDashboard() {
           )}
 
           {/* Admin Sidebar */}
-          <div className={`${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 ease-in-out fixed lg:static inset-y-0 left-0 z-40 lg:z-auto w-64 bg-white shadow-lg border-r border-purple-100 min-h-screen`}
+          <div className={`${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 ease-in-out fixed lg:static inset-y-0 left-0 z-40 lg:z-auto w-64 bg-white shadow-lg border-r border-purple-100 min-h-screen`}>
             <div className="p-6">
               <div className="flex items-center mb-8">
                 <div className="bg-gradient-purple w-12 h-12 rounded-full flex items-center justify-center mr-3">
