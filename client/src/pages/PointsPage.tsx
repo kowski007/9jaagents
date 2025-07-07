@@ -30,7 +30,7 @@ import { apiRequest } from "@/lib/queryClient";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 
 export default function PointsPage() {
-  const { user } = useAuth();
+  const { user, isAuthenticated } = useAuth();
   const { showSuccess, showError } = useToastEnhanced();
   const queryClient = useQueryClient();
   const [exchangeAmount, setExchangeAmount] = useState("");
