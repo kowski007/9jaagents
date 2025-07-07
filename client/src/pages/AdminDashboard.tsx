@@ -51,6 +51,7 @@ export default function AdminDashboard() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+  const [activeTab, setActiveTab] = useState("users");
 
   // All hooks must be called before any conditional returns
   const { data: users, isLoading: usersLoading } = useQuery({
@@ -205,50 +206,120 @@ export default function AdminDashboard() {
                 <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
                   Overview
                 </div>
-                <a href="/admin" className="flex items-center px-3 py-2 text-sm font-medium text-purple-700 bg-purple-100 rounded-lg">
+                <button className="flex items-center px-3 py-2 text-sm font-medium text-purple-700 bg-purple-100 rounded-lg w-full text-left">
                   <Activity className="h-4 w-4 mr-3" />
                   Dashboard
-                </a>
+                </button>
                 
                 <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 mt-6">
                   Management
                 </div>
-                <a href="#users" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-purple-50 rounded-lg transition-colors">
+                <button 
+                  onClick={() => {
+                    setActiveTab("users");
+                    setIsSidebarOpen(false);
+                  }} 
+                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors w-full text-left ${
+                    activeTab === "users" 
+                      ? "text-purple-700 bg-purple-100" 
+                      : "text-gray-700 hover:bg-purple-50"
+                  }`}
+                >
                   <Users className="h-4 w-4 mr-3" />
                   Users & Sellers
-                </a>
-                <a href="#agents" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-purple-50 rounded-lg transition-colors">
+                </button>
+                <button 
+                  onClick={() => {
+                    setActiveTab("agents");
+                    setIsSidebarOpen(false);
+                  }} 
+                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors w-full text-left ${
+                    activeTab === "agents" 
+                      ? "text-purple-700 bg-purple-100" 
+                      : "text-gray-700 hover:bg-purple-50"
+                  }`}
+                >
                   <Bot className="h-4 w-4 mr-3" />
                   Agents Management
-                </a>
-                <a href="#orders" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-purple-50 rounded-lg transition-colors">
+                </button>
+                <button 
+                  onClick={() => {
+                    setActiveTab("orders");
+                    setIsSidebarOpen(false);
+                  }} 
+                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors w-full text-left ${
+                    activeTab === "orders" 
+                      ? "text-purple-700 bg-purple-100" 
+                      : "text-gray-700 hover:bg-purple-50"
+                  }`}
+                >
                   <ShoppingCart className="h-4 w-4 mr-3" />
                   Orders & Payments
-                </a>
+                </button>
                 
                 <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 mt-6">
                   Analytics
                 </div>
-                <a href="#analytics" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-purple-50 rounded-lg transition-colors">
+                <button 
+                  onClick={() => {
+                    setActiveTab("analytics");
+                    setIsSidebarOpen(false);
+                  }} 
+                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors w-full text-left ${
+                    activeTab === "analytics" 
+                      ? "text-purple-700 bg-purple-100" 
+                      : "text-gray-700 hover:bg-purple-50"
+                  }`}
+                >
                   <TrendingUp className="h-4 w-4 mr-3" />
                   Analytics
-                </a>
-                <a href="#moderation" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-purple-50 rounded-lg transition-colors">
+                </button>
+                <button 
+                  onClick={() => {
+                    setActiveTab("moderation");
+                    setIsSidebarOpen(false);
+                  }} 
+                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors w-full text-left ${
+                    activeTab === "moderation" 
+                      ? "text-purple-700 bg-purple-100" 
+                      : "text-gray-700 hover:bg-purple-50"
+                  }`}
+                >
                   <AlertTriangle className="h-4 w-4 mr-3" />
                   Moderation
-                </a>
+                </button>
                 
                 <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 mt-6">
                   Settings
                 </div>
-                <a href="#platform-settings" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-purple-50 rounded-lg transition-colors">
+                <button 
+                  onClick={() => {
+                    setActiveTab("settings");
+                    setIsSidebarOpen(false);
+                  }} 
+                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors w-full text-left ${
+                    activeTab === "settings" 
+                      ? "text-purple-700 bg-purple-100" 
+                      : "text-gray-700 hover:bg-purple-50"
+                  }`}
+                >
                   <Shield className="h-4 w-4 mr-3" />
                   Platform Settings
-                </a>
-                <a href="#system" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-purple-50 rounded-lg transition-colors">
+                </button>
+                <button 
+                  onClick={() => {
+                    setActiveTab("system");
+                    setIsSidebarOpen(false);
+                  }} 
+                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors w-full text-left ${
+                    activeTab === "system" 
+                      ? "text-purple-700 bg-purple-100" 
+                      : "text-gray-700 hover:bg-purple-50"
+                  }`}
+                >
                   <Activity className="h-4 w-4 mr-3" />
                   System Health
-                </a>
+                </button>
               </nav>
             </div>
           </div>
@@ -355,7 +426,7 @@ export default function AdminDashboard() {
           </div>
 
           {/* Management Tabs */}
-          <Tabs defaultValue="users" className="space-y-6">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-6">
             <div className="flex items-center justify-between">
               <TabsList className="bg-white/90 backdrop-blur-sm border border-purple-100 shadow-lg p-1 h-12">
                 <TabsTrigger 
@@ -619,6 +690,176 @@ export default function AdminDashboard() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Analytics Tab */}
+            <TabsContent value="analytics">
+              <Card className="border-0 shadow-xl bg-white/90 backdrop-blur-sm overflow-hidden">
+                <CardHeader className="border-b border-purple-100 bg-gradient-purple-light">
+                  <CardTitle className="text-xl text-gray-900 flex items-center">
+                    <TrendingUp className="h-5 w-5 mr-2" />
+                    Analytics Dashboard
+                  </CardTitle>
+                  <CardDescription className="text-gray-600">
+                    Platform performance metrics and insights
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="bg-gradient-to-r from-blue-50 to-indigo-50 p-6 rounded-xl">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold text-gray-900">Revenue Growth</h3>
+                        <TrendingUp className="h-5 w-5 text-green-600" />
+                      </div>
+                      <div className="text-2xl font-bold text-gray-900 mb-2">+{stats.revenueGrowth}%</div>
+                      <p className="text-sm text-gray-600">vs last month</p>
+                    </div>
+                    <div className="bg-gradient-to-r from-purple-50 to-pink-50 p-6 rounded-xl">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold text-gray-900">User Growth</h3>
+                        <Users className="h-5 w-5 text-purple-600" />
+                      </div>
+                      <div className="text-2xl font-bold text-gray-900 mb-2">+{stats.userGrowth}%</div>
+                      <p className="text-sm text-gray-600">vs last month</p>
+                    </div>
+                    <div className="bg-gradient-to-r from-green-50 to-emerald-50 p-6 rounded-xl">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold text-gray-900">Active Rate</h3>
+                        <Activity className="h-5 w-5 text-green-600" />
+                      </div>
+                      <div className="text-2xl font-bold text-gray-900 mb-2">
+                        {Math.round((stats.activeAgents / Math.max(stats.totalAgents, 1)) * 100)}%
+                      </div>
+                      <p className="text-sm text-gray-600">agents active</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Moderation Tab */}
+            <TabsContent value="moderation">
+              <Card className="border-0 shadow-xl bg-white/90 backdrop-blur-sm overflow-hidden">
+                <CardHeader className="border-b border-purple-100 bg-gradient-purple-light">
+                  <CardTitle className="text-xl text-gray-900 flex items-center">
+                    <AlertTriangle className="h-5 w-5 mr-2" />
+                    Content Moderation
+                  </CardTitle>
+                  <CardDescription className="text-gray-600">
+                    Review and moderate platform content
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-yellow-50 p-6 rounded-xl border border-yellow-200">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold text-gray-900">Pending Reviews</h3>
+                        <AlertTriangle className="h-5 w-5 text-yellow-600" />
+                      </div>
+                      <div className="text-2xl font-bold text-gray-900 mb-2">0</div>
+                      <p className="text-sm text-gray-600">agents awaiting approval</p>
+                    </div>
+                    <div className="bg-red-50 p-6 rounded-xl border border-red-200">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold text-gray-900">Reported Content</h3>
+                        <Shield className="h-5 w-5 text-red-600" />
+                      </div>
+                      <div className="text-2xl font-bold text-gray-900 mb-2">0</div>
+                      <p className="text-sm text-gray-600">reports to review</p>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* Settings Tab */}
+            <TabsContent value="settings">
+              <Card className="border-0 shadow-xl bg-white/90 backdrop-blur-sm overflow-hidden">
+                <CardHeader className="border-b border-purple-100 bg-gradient-purple-light">
+                  <CardTitle className="text-xl text-gray-900 flex items-center">
+                    <Shield className="h-5 w-5 mr-2" />
+                    Platform Settings
+                  </CardTitle>
+                  <CardDescription className="text-gray-600">
+                    Configure platform-wide settings and policies
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="space-y-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                      <div className="bg-gray-50 p-6 rounded-xl">
+                        <h3 className="font-semibold text-gray-900 mb-4">Commission Settings</h3>
+                        <div className="space-y-3">
+                          <div className="flex justify-between">
+                            <span className="text-sm text-gray-600">Platform Fee</span>
+                            <span className="font-medium">10%</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm text-gray-600">Minimum Payout</span>
+                            <span className="font-medium">$100</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="bg-gray-50 p-6 rounded-xl">
+                        <h3 className="font-semibold text-gray-900 mb-4">Platform Status</h3>
+                        <div className="space-y-3">
+                          <div className="flex justify-between">
+                            <span className="text-sm text-gray-600">Maintenance Mode</span>
+                            <Badge variant="default">Off</Badge>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-sm text-gray-600">Registration</span>
+                            <Badge variant="default">Open</Badge>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </TabsContent>
+
+            {/* System Health Tab */}
+            <TabsContent value="system">
+              <Card className="border-0 shadow-xl bg-white/90 backdrop-blur-sm overflow-hidden">
+                <CardHeader className="border-b border-purple-100 bg-gradient-purple-light">
+                  <CardTitle className="text-xl text-gray-900 flex items-center">
+                    <Activity className="h-5 w-5 mr-2" />
+                    System Health
+                  </CardTitle>
+                  <CardDescription className="text-gray-600">
+                    Monitor system performance and health metrics
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    <div className="bg-green-50 p-6 rounded-xl border border-green-200">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold text-gray-900">API Status</h3>
+                        <CheckCircle className="h-5 w-5 text-green-600" />
+                      </div>
+                      <div className="text-lg font-bold text-green-700 mb-2">Healthy</div>
+                      <p className="text-sm text-gray-600">All systems operational</p>
+                    </div>
+                    <div className="bg-blue-50 p-6 rounded-xl border border-blue-200">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold text-gray-900">Database</h3>
+                        <Activity className="h-5 w-5 text-blue-600" />
+                      </div>
+                      <div className="text-lg font-bold text-blue-700 mb-2">Connected</div>
+                      <p className="text-sm text-gray-600">Response time: <50ms</p>
+                    </div>
+                    <div className="bg-purple-50 p-6 rounded-xl border border-purple-200">
+                      <div className="flex items-center justify-between mb-4">
+                        <h3 className="font-semibold text-gray-900">Storage</h3>
+                        <Shield className="h-5 w-5 text-purple-600" />
+                      </div>
+                      <div className="text-lg font-bold text-purple-700 mb-2">Available</div>
+                      <p className="text-sm text-gray-600">85% capacity remaining</p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
