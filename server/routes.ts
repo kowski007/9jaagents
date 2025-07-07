@@ -160,12 +160,33 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Agent routes
   app.get('/api/agents', async (req, res) => {
     try {
-      const { categoryId, search } = req.query;
+      const { categoryId, search, sort } = req.query;
       const agents = await storage.getAgents({
         categoryId: categoryId ? parseInt(categoryId as string) : undefined,
         search: search as string,
       });
-      res.json(agents);
+      
+      // Sort agents based on sort parameter
+      let sortedAgents = [...agents];
+      switch (sort) {
+        case 'newest':
+          sortedAgents.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+          break;
+        case 'price_low':
+          sortedAgents.sort((a, b) => (a.basicPrice || 0) - (b.basicPrice || 0));
+          break;
+        case 'price_high':
+          sortedAgents.sort((a, b) => (b.basicPrice || 0) - (a.basicPrice || 0));
+          break;
+        case 'rating':
+          sortedAgents.sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0));
+          break;
+        default: // popular
+          sortedAgents.sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0));
+      }
+      
+      console.log(`Fetched ${sortedAgents.length} agents with filters:`, { categoryId, search, sort });
+      res.json(sortedAgents);
     } catch (error) {
       console.error("Error fetching agents:", error);
       res.status(500).json({ message: "Failed to fetch agents" });
