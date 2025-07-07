@@ -102,10 +102,53 @@ This is a full-stack AI agent marketplace application built with Express.js, Rea
 - **REPLIT_DOMAINS**: Allowed domains for OIDC
 - **ISSUER_URL**: OIDC issuer URL (defaults to Replit)
 
+## Database Architecture
+
+### Technology Stack
+- **PostgreSQL** - Production-grade relational database with Neon serverless hosting
+- **Drizzle ORM** - Type-safe database operations with full TypeScript support
+- **15+ Interconnected Tables** - Complete e-commerce and financial management system
+
+### Core Database Structure
+1. **User Management** - Authentication, roles, earnings, loyalty points
+2. **Agent Marketplace** - 4-tier pricing (Free, Basic, Standard, Premium) with rich metadata
+3. **Financial System** - Wallets, transactions, withdrawals, 10% commission tracking
+4. **Engagement Features** - Reviews, favorites, notifications, referrals, leaderboards
+
+### Payment Flow
+- **Paystack Integration** - Real credit/debit card processing
+- **Automatic Revenue Split** - 90% to seller, 10% platform commission
+- **Secure Withdrawals** - Admin-approved bank transfers to sellers
+- **Complete Audit Trail** - Every transaction tracked and recorded
+
+## Deployment Readiness
+
+### Platform Deployment Support
+- ✅ **Vercel Ready** - Complete serverless function configuration
+- ✅ **Netlify Ready** - Function-based deployment setup
+- ✅ **Environment Variables** - Secure configuration management
+- ✅ **Database Migration** - Automated schema deployment via Drizzle
+
+### Deployment Files Created
+- `vercel.json` - Vercel deployment configuration
+- `netlify.toml` - Netlify deployment settings
+- `api/index.ts` - Vercel serverless entry point
+- `netlify/functions/server.ts` - Netlify function adapter
+- `.env.example` - Environment variable template
+- `deployment-guide.md` - Complete deployment instructions
+
 ## Changelog
 
 ```
 Changelog:
+- July 07, 2025. Platform deployment preparation and database documentation:
+  * Documented complete database architecture with 15+ tables
+  * Created Vercel and Netlify deployment configurations
+  * Added comprehensive deployment guide with step-by-step instructions
+  * Prepared environment variable templates and security configurations
+  * Enhanced Create Agent form with redesigned 4-tier pricing (Free, Basic, Standard, Premium)
+  * Completed SuperAdminDashboard with full user/agent/financial management
+  * All payment flows are live and functional with real Paystack integration
 - July 07, 2025. Enhanced platform with comprehensive features:
   * Added complete points system with earning, spending, and exchange for Naira
   * Implemented referral system with bonuses for signups, agent listings, and purchases
