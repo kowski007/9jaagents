@@ -547,172 +547,217 @@ export default function CreateAgent() {
       case 4:
         return (
           <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
-              {/* Free Package */}
-              <div className="border rounded-lg p-4">
-                <div className="flex items-center mb-3">
-                  <Package className="h-5 w-5 text-gray-600 mr-2" />
-                  <h3 className="font-semibold">Free Package</h3>
-                </div>
-                <div className="space-y-3">
-                  <div>
-                    <Label htmlFor="freePrice">Price ($)</Label>
-                    <Input
-                      id="freePrice"
-                      type="number"
-                      value="0.00"
-                      disabled
-                      className="bg-gray-50"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="freeDeliveryDays">Delivery Days</Label>
-                    <Input
-                      id="freeDeliveryDays"
-                      type="number"
-                      value={formData.freeDeliveryDays}
-                      onChange={(e) => setFormData(prev => ({ ...prev, freeDeliveryDays: e.target.value }))}
-                      placeholder="1"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="freeDescription">Description</Label>
-                    <Textarea
-                      id="freeDescription"
-                      value={formData.freeDescription}
-                      onChange={(e) => setFormData(prev => ({ ...prev, freeDescription: e.target.value }))}
-                      placeholder="What's included in the free package..."
-                      rows={3}
-                    />
-                  </div>
-                </div>
+            <div className="space-y-4">
+              {/* Pricing Cards in Compact Layout */}
+              <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+                {/* Free Package */}
+                <Card className="border-2 border-gray-200 bg-gray-50">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Package className="h-5 w-5 text-gray-600" />
+                      Free Package
+                      <Badge variant="secondary" className="ml-auto">$0</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label htmlFor="freeDeliveryDays" className="text-sm">Delivery Days</Label>
+                        <Input
+                          id="freeDeliveryDays"
+                          type="number"
+                          value={formData.freeDeliveryDays}
+                          onChange={(e) => setFormData(prev => ({ ...prev, freeDeliveryDays: e.target.value }))}
+                          placeholder="1"
+                          className="h-8"
+                        />
+                      </div>
+                      <div className="flex items-end">
+                        <div className="text-sm text-gray-600">Price: FREE</div>
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="freeDescription" className="text-sm">Description</Label>
+                      <Textarea
+                        id="freeDescription"
+                        value={formData.freeDescription}
+                        onChange={(e) => setFormData(prev => ({ ...prev, freeDescription: e.target.value }))}
+                        placeholder="What's included in the free package..."
+                        rows={2}
+                        className="text-sm"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Basic Package - Required */}
+                <Card className="border-2 border-green-200 bg-green-50">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Package className="h-5 w-5 text-green-600" />
+                      Basic Package *
+                      <Badge variant="default" className="ml-auto bg-green-600">Required</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label htmlFor="basicPrice" className="text-sm">Price ($) *</Label>
+                        <Input
+                          id="basicPrice"
+                          type="number"
+                          step="0.01"
+                          value={formData.basicPrice}
+                          onChange={(e) => setFormData(prev => ({ ...prev, basicPrice: e.target.value }))}
+                          placeholder="25.00"
+                          className="h-8"
+                          required
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="basicDeliveryDays" className="text-sm">Delivery Days *</Label>
+                        <Input
+                          id="basicDeliveryDays"
+                          type="number"
+                          value={formData.basicDeliveryDays}
+                          onChange={(e) => setFormData(prev => ({ ...prev, basicDeliveryDays: e.target.value }))}
+                          placeholder="3"
+                          className="h-8"
+                          required
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="basicDescription" className="text-sm">Description *</Label>
+                      <Textarea
+                        id="basicDescription"
+                        value={formData.basicDescription}
+                        onChange={(e) => setFormData(prev => ({ ...prev, basicDescription: e.target.value }))}
+                        placeholder="What's included in the basic package..."
+                        rows={2}
+                        className="text-sm"
+                        required
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Standard Package */}
+                <Card className="border-2 border-blue-200 bg-blue-50">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Star className="h-5 w-5 text-blue-600" />
+                      Standard Package
+                      <Badge variant="outline" className="ml-auto border-blue-600 text-blue-600">Optional</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label htmlFor="standardPrice" className="text-sm">Price ($)</Label>
+                        <Input
+                          id="standardPrice"
+                          type="number"
+                          step="0.01"
+                          value={formData.standardPrice}
+                          onChange={(e) => setFormData(prev => ({ ...prev, standardPrice: e.target.value }))}
+                          placeholder="50.00"
+                          className="h-8"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="standardDeliveryDays" className="text-sm">Delivery Days</Label>
+                        <Input
+                          id="standardDeliveryDays"
+                          type="number"
+                          value={formData.standardDeliveryDays}
+                          onChange={(e) => setFormData(prev => ({ ...prev, standardDeliveryDays: e.target.value }))}
+                          placeholder="5"
+                          className="h-8"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="standardDescription" className="text-sm">Description</Label>
+                      <Textarea
+                        id="standardDescription"
+                        value={formData.standardDescription}
+                        onChange={(e) => setFormData(prev => ({ ...prev, standardDescription: e.target.value }))}
+                        placeholder="What's included in the standard package..."
+                        rows={2}
+                        className="text-sm"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
+
+                {/* Premium Package */}
+                <Card className="border-2 border-purple-200 bg-purple-50">
+                  <CardHeader className="pb-3">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      <Star className="h-5 w-5 text-purple-600" />
+                      Premium Package
+                      <Badge variant="outline" className="ml-auto border-purple-600 text-purple-600">Optional</Badge>
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <Label htmlFor="premiumPrice" className="text-sm">Price ($)</Label>
+                        <Input
+                          id="premiumPrice"
+                          type="number"
+                          step="0.01"
+                          value={formData.premiumPrice}
+                          onChange={(e) => setFormData(prev => ({ ...prev, premiumPrice: e.target.value }))}
+                          placeholder="100.00"
+                          className="h-8"
+                        />
+                      </div>
+                      <div>
+                        <Label htmlFor="premiumDeliveryDays" className="text-sm">Delivery Days</Label>
+                        <Input
+                          id="premiumDeliveryDays"
+                          type="number"
+                          value={formData.premiumDeliveryDays}
+                          onChange={(e) => setFormData(prev => ({ ...prev, premiumDeliveryDays: e.target.value }))}
+                          placeholder="7"
+                          className="h-8"
+                        />
+                      </div>
+                    </div>
+                    <div>
+                      <Label htmlFor="premiumDescription" className="text-sm">Description</Label>
+                      <Textarea
+                        id="premiumDescription"
+                        value={formData.premiumDescription}
+                        onChange={(e) => setFormData(prev => ({ ...prev, premiumDescription: e.target.value }))}
+                        placeholder="What's included in the premium package..."
+                        rows={2}
+                        className="text-sm"
+                      />
+                    </div>
+                  </CardContent>
+                </Card>
               </div>
 
-              {/* Basic Package */}
-              <div className="border rounded-lg p-4 border-green-200 bg-green-50">
-                <div className="flex items-center mb-3">
-                  <Package className="h-5 w-5 text-green-600 mr-2" />
-                  <h3 className="font-semibold">Basic Package *</h3>
-                </div>
-                <div className="space-y-3">
-                  <div>
-                    <Label htmlFor="basicPrice">Price ($) *</Label>
-                    <Input
-                      id="basicPrice"
-                      type="number"
-                      step="0.01"
-                      value={formData.basicPrice}
-                      onChange={(e) => setFormData(prev => ({ ...prev, basicPrice: e.target.value }))}
-                      placeholder="25.00"
-                      required
-                    />
+              {/* Pricing Tips */}
+              <Card className="bg-blue-50 border-blue-200">
+                <CardContent className="p-4">
+                  <div className="flex items-start gap-3">
+                    <AlertCircle className="h-5 w-5 text-blue-600 mt-0.5" />
+                    <div>
+                      <h4 className="font-semibold text-blue-900 mb-1">Pricing Tips</h4>
+                      <ul className="text-sm text-blue-800 space-y-1">
+                        <li>• <strong>Free Package:</strong> Great for attracting new customers and showcasing your work</li>
+                        <li>• <strong>Basic Package:</strong> Your main offering - price competitively but fairly</li>
+                        <li>• <strong>Standard & Premium:</strong> Offer additional value with more features or faster delivery</li>
+                        <li>• <strong>Delivery Time:</strong> Set realistic timelines you can consistently meet</li>
+                      </ul>
+                    </div>
                   </div>
-                  <div>
-                    <Label htmlFor="basicDeliveryDays">Delivery Days *</Label>
-                    <Input
-                      id="basicDeliveryDays"
-                      type="number"
-                      value={formData.basicDeliveryDays}
-                      onChange={(e) => setFormData(prev => ({ ...prev, basicDeliveryDays: e.target.value }))}
-                      placeholder="3"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="basicDescription">Description *</Label>
-                    <Textarea
-                      id="basicDescription"
-                      value={formData.basicDescription}
-                      onChange={(e) => setFormData(prev => ({ ...prev, basicDescription: e.target.value }))}
-                      placeholder="What's included in the basic package..."
-                      rows={3}
-                      required
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Standard Package */}
-              <div className="border rounded-lg p-4">
-                <div className="flex items-center mb-3">
-                  <Star className="h-5 w-5 text-blue-600 mr-2" />
-                  <h3 className="font-semibold">Standard Package</h3>
-                </div>
-                <div className="space-y-3">
-                  <div>
-                    <Label htmlFor="standardPrice">Price ($)</Label>
-                    <Input
-                      id="standardPrice"
-                      type="number"
-                      step="0.01"
-                      value={formData.standardPrice}
-                      onChange={(e) => setFormData(prev => ({ ...prev, standardPrice: e.target.value }))}
-                      placeholder="50.00"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="standardDeliveryDays">Delivery Days</Label>
-                    <Input
-                      id="standardDeliveryDays"
-                      type="number"
-                      value={formData.standardDeliveryDays}
-                      onChange={(e) => setFormData(prev => ({ ...prev, standardDeliveryDays: e.target.value }))}
-                      placeholder="5"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="standardDescription">Description</Label>
-                    <Textarea
-                      id="standardDescription"
-                      value={formData.standardDescription}
-                      onChange={(e) => setFormData(prev => ({ ...prev, standardDescription: e.target.value }))}
-                      placeholder="What's included in the standard package..."
-                      rows={3}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Premium Package */}
-              <div className="border rounded-lg p-4">
-                <div className="flex items-center mb-3">
-                  <Star className="h-5 w-5 text-purple-600 mr-2" />
-                  <h3 className="font-semibold">Premium Package</h3>
-                </div>
-                <div className="space-y-3">
-                  <div>
-                    <Label htmlFor="premiumPrice">Price ($)</Label>
-                    <Input
-                      id="premiumPrice"
-                      type="number"
-                      step="0.01"
-                      value={formData.premiumPrice}
-                      onChange={(e) => setFormData(prev => ({ ...prev, premiumPrice: e.target.value }))}
-                      placeholder="100.00"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="premiumDeliveryDays">Delivery Days</Label>
-                    <Input
-                      id="premiumDeliveryDays"
-                      type="number"
-                      value={formData.premiumDeliveryDays}
-                      onChange={(e) => setFormData(prev => ({ ...prev, premiumDeliveryDays: e.target.value }))}
-                      placeholder="7"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="premiumDescription">Description</Label>
-                    <Textarea
-                      id="premiumDescription"
-                      value={formData.premiumDescription}
-                      onChange={(e) => setFormData(prev => ({ ...prev, premiumDescription: e.target.value }))}
-                      placeholder="What's included in the premium package..."
-                      rows={3}
-                    />
-                  </div>
-                </div>
-              </div>
+                </CardContent>
+              </Card>
             </div>
           </div>
         );
