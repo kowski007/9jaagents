@@ -344,7 +344,7 @@ export default function ListAgent() {
                         <SelectValue placeholder="Select response time" />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="instant">Instant (< 1 second)</SelectItem>
+                        <SelectItem value="instant">Instant (&lt; 1 second)</SelectItem>
                         <SelectItem value="fast">Fast (1-5 seconds)</SelectItem>
                         <SelectItem value="moderate">Moderate (5-15 seconds)</SelectItem>
                         <SelectItem value="slow">Slow (15+ seconds)</SelectItem>
