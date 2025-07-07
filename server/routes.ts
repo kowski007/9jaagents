@@ -1694,6 +1694,39 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Admin agent creation
+  app.post('/api/admin/agents', isAuthenticated, isAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const agentData = req.body;
+      
+      // Validate required fields
+      if (!agentData.title || !agentData.description || !agentData.categoryId || !agentData.sellerId) {
+        return res.status(400).json({ message: "Missing required fields" });
+      }
+      
+      // Create the agent
+      const agent = await storage.createAgent({
+        ...agentData,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      });
+      
+      // Notify the assigned seller
+      await storage.createNotification({
+        userId: agentData.sellerId,
+        type: 'agent',
+        title: 'New Agent Assigned',
+        message: `Admin has created and assigned agent "${agentData.title}" to you.`,
+        actionUrl: `/seller/agents/${agent.id}`
+      });
+      
+      res.status(201).json(agent);
+    } catch (error) {
+      console.error("Error creating agent:", error);
+      res.status(500).json({ message: "Failed to create agent" });
+    }
+  });
+
   // Agent management actions
   app.put('/api/admin/agents/:id/toggle-status', isAuthenticated, isAdmin, async (req: AuthenticatedRequest, res) => {
     try {

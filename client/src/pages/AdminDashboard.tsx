@@ -41,6 +41,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useState } from "react";
 import { Menu, X } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import AdminAgentCreation from "./AdminAgentCreation";
 
 interface DashboardStats {
   totalUsers: number;
@@ -868,6 +869,20 @@ export default function AdminDashboard() {
                 </button>
                 <button 
                   onClick={() => {
+                    setActiveTab("create-agent");
+                    setIsSidebarOpen(false);
+                  }} 
+                  className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors w-full text-left ${
+                    activeTab === "create-agent" 
+                      ? "text-purple-700 bg-purple-100" 
+                      : "text-gray-700 hover:bg-purple-50"
+                  }`}
+                >
+                  <Plus className="h-4 w-4 mr-3" />
+                  Create Agent
+                </button>
+                <button 
+                  onClick={() => {
                     setActiveTab("orders");
                     setIsSidebarOpen(false);
                   }} 
@@ -1066,6 +1081,13 @@ export default function AdminDashboard() {
                 >
                   <Bot className="h-4 w-4 mr-2" />
                   Agents
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="create-agent" 
+                  className="data-[state=active]:bg-gradient-purple data-[state=active]:text-white data-[state=active]:shadow-lg px-6 py-2"
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create
                 </TabsTrigger>
                 <TabsTrigger 
                   value="orders" 
@@ -1427,6 +1449,11 @@ export default function AdminDashboard() {
             {/* System Health Tab */}
             <TabsContent value="system">
               <SystemHealthTab />
+            </TabsContent>
+
+            {/* Create Agent Tab */}
+            <TabsContent value="create-agent">
+              <AdminAgentCreation />
             </TabsContent>
           </Tabs>
         </div>
