@@ -1,0 +1,202 @@
+bash: 200: command not found
+~/workspace$ netlify deploy --prod
+This folder isn't linked to a project yet
+? What would you like to do? +  Create & 
+configure a new project
+? Team: aiagent inc
+? Project name (leave blank for a random name; 
+you can change it later): 9jaagents
+
+Project Created
+
+Admin URL:  https://app.netlify.com/projects/9jaagents
+URL:        https://9jaagents.netlify.app
+Project ID: 26c85d4e-ad82-419b-ae5d-a939944f13d1
+
+
+Adding local .netlify folder to .gitignore file...
+✔ Linked to 9jaagents
+
+Netlify Build                                                 
+────────────────────────────────────────────────────────────────
+
+❯ Version
+  @netlify/build 33.5.0
+
+❯ Flags
+  {}
+
+❯ Current directory
+  /home/runner/workspace
+
+❯ Config file
+  /home/runner/workspace/netlify.toml
+
+❯ Context
+  production
+
+build.command from netlify.toml                               
+────────────────────────────────────────────────────────────────
+
+$ npm run build
+
+> rest-express@1.0.0 build
+> vite build && esbuild server/index.ts --platform=node --packages=external --bundle --format=esm --outdir=dist
+
+vite v5.4.19 building for production...
+✓ 1776 modules transformed.
+../dist/public/index.html                   0.63 kB │ gzip:   0.38 kB
+../dist/public/assets/index-BfbwrOvA.css   93.40 kB │ gzip:  14.98 kB
+../dist/public/assets/index-Cf-hUcjF.js   760.49 kB │ gzip: 201.92 kB
+
+(!) Some chunks are larger than 500 kB after minification. Consider:
+- Using dynamic import() to code-split the application
+- Use build.rollupOptions.output.manualChunks to improve chunking: https://rollupjs.org/configuration-options/#output-manualchunks
+- Adjust chunk size limit for this warning via build.chunkSizeWarningLimit.
+✓ built in 5.56s
+
+  dist/index.js  107.0kb
+
+⚡ Done in 10ms
+
+(build.command completed in 6.4s)
+
+Functions bundling                                            
+────────────────────────────────────────────────────────────────
+
+Packaging Functions from netlify/functions directory:
+ - server.ts
+
+▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+
+    server/vite.ts:71:32:
+      71 │ ...h.resolve(import.meta.dirname,...
+         ╵              ~~~~~~~~~~~
+
+  You need to set the output format to "esm"
+  for "import.meta" to work correctly.
+
+✘ [ERROR] Top-level await is currently not supported with the "cjs" output format
+
+    vite.config.ts:13:10:
+      13 │           await import("@replit/v...
+         ╵           ~~~~~
+
+▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+
+    vite.config.ts:21:24:
+      21 │ ...h.resolve(import.meta.dirname,...
+         ╵              ~~~~~~~~~~~
+
+  You need to set the output format to "esm"
+  for "import.meta" to work correctly.
+
+▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+
+    vite.config.ts:22:30:
+      22 │ ...h.resolve(import.meta.dirname,...
+         ╵              ~~~~~~~~~~~
+
+  You need to set the output format to "esm"
+  for "import.meta" to work correctly.
+
+▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+
+    vite.config.ts:23:30:
+      23 │ ...h.resolve(import.meta.dirname,...
+         ╵              ~~~~~~~~~~~
+
+  You need to set the output format to "esm"
+  for "import.meta" to work correctly.
+
+✘ [ERROR] Could not resolve "@babel/preset-typescript/package.json"
+
+    node_modules/@babel/core/lib/config/files/module-types.js:151:40:
+      151 │ ...ire("@babel/preset-typescript...
+          ╵        ~~~~~~~~~~~~~~~~~~~~~~~~~
+
+  You can mark the path
+  "@babel/preset-typescript/package.json" as
+  external to exclude it from the bundle, which
+  will remove this error and leave the
+  unresolved path in the bundle. You can also
+  surround this "require" call with a try/catch
+  block to handle this failure at run-time
+  instead of bundle-time.
+
+✘ [ERROR] Could not resolve "../pkg"
+
+    node_modules/lightningcss/node/index.js:17:27:
+      17 │ ...dule.exports = require(`../pkg`);
+         ╵                           ~~~~~~~~
+
+▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+
+    vite.config.ts:26:21:
+      26 │ ...h.resolve(import.meta.dirname,...
+         ╵              ~~~~~~~~~~~
+
+  You need to set the output format to "esm"
+  for "import.meta" to work correctly.
+
+▲ [WARNING] "import.meta" is not available with the "cjs" output format and will be empty [empty-import-meta]
+
+    vite.config.ts:28:25:
+      28 │ ...h.resolve(import.meta.dirname,...
+         ╵              ~~~~~~~~~~~
+
+  You need to set the output format to "esm"
+  for "import.meta" to work correctly.
+
+▲ [WARNING] "esbuild" should be marked as external for use with "require.resolve" [require-resolve-not-external]
+
+    node_modules/vite/node_modules/esbuild/lib/main.js:1653:36:
+      1653 │ ...S = require.resolve("esbuild");
+           ╵                        ~~~~~~~~~
+
+7 of 8 warnings and all 3 errors shown (disable the message limit with --log-limit=0)
+
+Dependencies installation error                               
+────────────────────────────────────────────────────────────────
+
+  Error message
+  A Netlify Function failed to require one of its dependencies.
+  Please make sure it is present in the site's top-level "package.json".
+
+  Build failed with 3 errors:
+  node_modules/@babel/core/lib/config/files/module-types.js:151:40: ERROR: Could not resolve "@babel/preset-typescript/package.json"
+  node_modules/lightningcss/node/index.js:17:27: ERROR: Could not resolve "../pkg"
+  vite.config.ts:13:10: ERROR: Top-level await is currently not supported with the "cjs" output format
+
+  Resolved config
+  build:
+    command: npm run build
+    commandOrigin: config
+    environment:
+      - NODE_VERSION
+      - NPM_FLAGS
+    publish: /home/runner/workspace/dist/public
+    publishOrigin: config
+  functions:
+    "*":
+      external_node_modules:
+        - "@neondatabase/serverless"
+        - postgres
+      node_bundler: esbuild
+  functionsDirectory: /home/runner/workspace/netlify/functions
+  headers:
+    - for: /api/*
+      values:
+        Access-Control-Allow-Headers: Content-Type, Authorization
+        Access-Control-Allow-Methods: GET, POST, PUT, DELETE, OPTIONS
+        Access-Control-Allow-Origin: "*"
+  headersOrigin: config
+  redirects:
+    - from: /api/*
+      status: 200
+      to: /.netlify/functions/server/:splat
+    - from: /*
+      status: 200
+      to: /index.html
+  redirectsOrigin: config
+~/workspace$ 
