@@ -60,19 +60,27 @@ The platform uses 15+ interconnected tables:
    npm run db:push
    ```
 
-### Option 2: Netlify Deployment
+### Option 2: Netlify Deployment (Recommended)
 
-1. **Setup Database:**
-   - Same Neon database setup as Vercel
+1. **Database Already Connected:**
+   ```
+   DATABASE_URL=postgresql://neondb_owner:npg_jXWv7n8HdKsE@ep-sweet-band-adj9xeod-pooler.c-2.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require
+   ```
 
 2. **Deploy to Netlify:**
    ```bash
    npm install -g netlify-cli
+   netlify login
    netlify deploy --prod
    ```
 
-3. **Environment Variables in Netlify:**
-   - Same variables as Vercel setup
+3. **Environment Variables in Netlify Dashboard:**
+   - `DATABASE_URL` - Your Neon database (see above)
+   - `PAYSTACK_SECRET_KEY` - Your Paystack secret key
+   - `PAYSTACK_PUBLIC_KEY` - Your Paystack public key
+   - `SESSION_SECRET` - Random string for session encryption
+   - `NODE_ENV=production`
+   - `BASE_URL` - Your Netlify domain
 
 ### Required Environment Variables
 
