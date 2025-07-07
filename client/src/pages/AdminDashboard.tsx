@@ -33,6 +33,8 @@ import {
 } from "lucide-react";
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from "@/components/ui/dropdown-menu";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useState } from "react";
+import { Menu, X } from "lucide-react";
 
 interface DashboardStats {
   totalUsers: number;
@@ -48,6 +50,7 @@ interface DashboardStats {
 export default function AdminDashboard() {
   const { user } = useAuth();
   const isMobile = useIsMobile();
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // All hooks must be called before any conditional returns
   const { data: users, isLoading: usersLoading } = useQuery({
@@ -164,7 +167,95 @@ export default function AdminDashboard() {
   return (
     <Layout>
       <div className="min-h-screen bg-gradient-to-br from-purple-50 via-violet-50 to-blue-50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex">
+          {/* Mobile Menu Button */}
+          <div className="lg:hidden fixed top-4 left-4 z-50">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsSidebarOpen(!isSidebarOpen)}
+              className="bg-white shadow-md"
+            >
+              {isSidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            </Button>
+          </div>
+
+          {/* Mobile Sidebar Overlay */}
+          {isSidebarOpen && (
+            <div className="lg:hidden fixed inset-0 z-40 bg-black bg-opacity-50" onClick={() => setIsSidebarOpen(false)} />
+          )}
+
+          {/* Admin Sidebar */}
+          <div className={`${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} lg:translate-x-0 transition-transform duration-300 ease-in-out fixed lg:static inset-y-0 left-0 z-40 lg:z-auto w-64 bg-white shadow-lg border-r border-purple-100 min-h-screen`}
+            <div className="p-6">
+              <div className="flex items-center mb-8">
+                <div className="bg-gradient-purple w-12 h-12 rounded-full flex items-center justify-center mr-3">
+                  <Shield className="h-6 w-6 text-white" />
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Admin Panel</h3>
+                  <Badge className="bg-purple-100 text-purple-800 border-purple-200">
+                    Super Admin
+                  </Badge>
+                </div>
+              </div>
+              
+              {/* Navigation Menu */}
+              <nav className="space-y-2">
+                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3">
+                  Overview
+                </div>
+                <a href="/admin" className="flex items-center px-3 py-2 text-sm font-medium text-purple-700 bg-purple-100 rounded-lg">
+                  <Activity className="h-4 w-4 mr-3" />
+                  Dashboard
+                </a>
+                
+                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 mt-6">
+                  Management
+                </div>
+                <a href="#users" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-purple-50 rounded-lg transition-colors">
+                  <Users className="h-4 w-4 mr-3" />
+                  Users & Sellers
+                </a>
+                <a href="#agents" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-purple-50 rounded-lg transition-colors">
+                  <Bot className="h-4 w-4 mr-3" />
+                  Agents Management
+                </a>
+                <a href="#orders" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-purple-50 rounded-lg transition-colors">
+                  <ShoppingCart className="h-4 w-4 mr-3" />
+                  Orders & Payments
+                </a>
+                
+                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 mt-6">
+                  Analytics
+                </div>
+                <a href="#analytics" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-purple-50 rounded-lg transition-colors">
+                  <TrendingUp className="h-4 w-4 mr-3" />
+                  Analytics
+                </a>
+                <a href="#moderation" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-purple-50 rounded-lg transition-colors">
+                  <AlertTriangle className="h-4 w-4 mr-3" />
+                  Moderation
+                </a>
+                
+                <div className="text-xs font-semibold text-gray-500 uppercase tracking-wider mb-3 mt-6">
+                  Settings
+                </div>
+                <a href="#platform-settings" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-purple-50 rounded-lg transition-colors">
+                  <Shield className="h-4 w-4 mr-3" />
+                  Platform Settings
+                </a>
+                <a href="#system" className="flex items-center px-3 py-2 text-sm font-medium text-gray-700 hover:bg-purple-50 rounded-lg transition-colors">
+                  <Activity className="h-4 w-4 mr-3" />
+                  System Health
+                </a>
+              </nav>
+            </div>
+          </div>
+
+          {/* Main Content */}
+          <div className="flex-1">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           {/* Header */}
           <div className="mb-8">
             <div className="flex items-center justify-between">
@@ -533,6 +624,8 @@ export default function AdminDashboard() {
               </Card>
             </TabsContent>
           </Tabs>
+        </div>
+          </div>
         </div>
       </div>
     </Layout>
