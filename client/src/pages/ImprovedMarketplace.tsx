@@ -29,7 +29,8 @@ import {
   ChevronDown,
   Sparkles,
   Zap,
-  Target
+  Target,
+  Plus
 } from "lucide-react";
 import Layout from "@/components/Layout";
 import AgentCard from "@/components/AgentCard";
