@@ -20,6 +20,9 @@ import NotificationsPage from "@/pages/NotificationsPage";
 import AboutPage from "@/pages/AboutPage";
 import TermsPage from "@/pages/TermsPage";
 import ImprovedMarketplace from "@/pages/ImprovedMarketplace";
+import PointsPage from "@/pages/PointsPage";
+import ReferralPage from "@/pages/ReferralPage";
+import LeaderboardPage from "@/pages/LeaderboardPage";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -39,6 +42,9 @@ function Router() {
         <Route path="/notifications" component={NotificationsPage} />
         <Route path="/about" component={AboutPage} />
         <Route path="/terms" component={TermsPage} />
+        <Route path="/points" component={PointsPage} />
+        <Route path="/referrals" component={ReferralPage} />
+        <Route path="/leaderboard" component={LeaderboardPage} />
         <Route component={NotFound} />
       </Switch>
     </>

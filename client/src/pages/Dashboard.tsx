@@ -25,7 +25,8 @@ import {
   Zap,
   Target,
   Menu,
-  X
+  X,
+  Coins
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToastEnhanced } from "@/hooks/useToastEnhanced";
@@ -173,6 +174,28 @@ export default function Dashboard() {
         >
           <Bell className="mr-3 h-4 w-4" />
           Notifications
+        </Button>
+        <Button 
+          variant="ghost" 
+          className="w-full justify-start"
+          onClick={() => {
+            setLocation('/points');
+            setIsMobileMenuOpen(false);
+          }}
+        >
+          <Coins className="mr-3 h-4 w-4" />
+          Points & Rewards
+        </Button>
+        <Button 
+          variant="ghost" 
+          className="w-full justify-start"
+          onClick={() => {
+            setLocation('/referrals');
+            setIsMobileMenuOpen(false);
+          }}
+        >
+          <Users className="mr-3 h-4 w-4" />
+          Referrals
         </Button>
         <Button 
           variant={activeTab === "settings" ? "default" : "ghost"} 

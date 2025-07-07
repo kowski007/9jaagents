@@ -9,6 +9,9 @@ import {
   cartItems,
   messages,
   favorites,
+  pointsHistory,
+  notifications,
+  dailyLogins,
   type User,
   type UpsertUser,
   type Category,
@@ -18,6 +21,11 @@ import {
   type CartItem,
   type Message,
   type Favorite,
+  type PointsHistory,
+  type Notification,
+  type InsertNotification,
+  type InsertPointsHistory,
+  type InsertDailyLogin,
   type InsertCategory,
   type InsertAgent,
   type InsertOrder,
@@ -74,6 +82,17 @@ export interface IStorage {
   getFavorites(userId: string): Promise<Favorite[]>;
   addToFavorites(favorite: InsertFavorite): Promise<Favorite>;
   removeFromFavorites(userId: string, agentId: number): Promise<void>;
+
+  // Points and Referral operations
+  getUserPoints(userId: string): Promise<number>;
+  addPoints(userId: string, points: number, type: string, source: string, description: string, referenceId?: string): Promise<void>;
+  getPointsHistory(userId: string): Promise<PointsHistory[]>;
+  checkDailyLogin(userId: string): Promise<boolean>;
+  recordDailyLogin(userId: string): Promise<number>;
+  createNotification(notification: InsertNotification): Promise<Notification>;
+  getNotifications(userId: string): Promise<Notification[]>;
+  markNotificationAsRead(notificationId: number): Promise<void>;
+  markAllNotificationsAsRead(userId: string): Promise<void>;
 }
 
 export class PostgreSQLStorage implements IStorage {
@@ -411,6 +430,120 @@ export class PostgreSQLStorage implements IStorage {
           eq(favorites.agentId, agentId)
         )
       );
+  }
+
+  // Points and Referral operations
+  async getUserPoints(userId: string): Promise<number> {
+    const user = await this.getUser(userId);
+    return user?.totalPoints || 0;
+  }
+
+  async addPoints(userId: string, points: number, type: string, source: string, description: string, referenceId?: string): Promise<void> {
+    // Add to points history
+    await db.insert(pointsHistory).values({
+      userId,
+      points,
+      type,
+      source,
+      description,
+      referenceId,
+    });
+
+    // Update user total points
+    await db.update(users)
+      .set({
+        totalPoints: sql`${users.totalPoints} + ${points}`,
+        updatedAt: new Date(),
+      })
+      .where(eq(users.id, userId));
+
+    // Create notification for points earned
+    if (type === 'earned') {
+      await this.createNotification({
+        userId,
+        type: 'points',
+        title: 'Points Earned!',
+        message: `You earned ${points} points from ${description}`,
+        actionUrl: '/points',
+        data: { points, source }
+      });
+    }
+  }
+
+  async getPointsHistory(userId: string): Promise<PointsHistory[]> {
+    return await db.select()
+      .from(pointsHistory)
+      .where(eq(pointsHistory.userId, userId))
+      .orderBy(desc(pointsHistory.createdAt));
+  }
+
+  async checkDailyLogin(userId: string): Promise<boolean> {
+    const today = new Date().toISOString().split('T')[0];
+    const existing = await db.select()
+      .from(dailyLogins)
+      .where(
+        and(
+          eq(dailyLogins.userId, userId),
+          eq(dailyLogins.loginDate, today)
+        )
+      )
+      .limit(1);
+    
+    return existing.length > 0;
+  }
+
+  async recordDailyLogin(userId: string): Promise<number> {
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Check if already logged in today
+    const alreadyLoggedIn = await this.checkDailyLogin(userId);
+    if (alreadyLoggedIn) {
+      throw new Error('Daily login already claimed today');
+    }
+
+    // Record daily login
+    const pointsEarned = 100;
+    await db.insert(dailyLogins).values({
+      userId,
+      loginDate: today,
+      pointsEarned,
+    });
+
+    // Add points
+    await this.addPoints(userId, pointsEarned, 'earned', 'daily_login', 'Daily login bonus');
+
+    // Update user last login date
+    await db.update(users)
+      .set({ lastLoginDate: today })
+      .where(eq(users.id, userId));
+
+    return pointsEarned;
+  }
+
+  async createNotification(notificationData: InsertNotification): Promise<Notification> {
+    const result = await db.insert(notifications).values({
+      ...notificationData,
+    }).returning();
+    return result[0];
+  }
+
+  async getNotifications(userId: string): Promise<Notification[]> {
+    return await db.select()
+      .from(notifications)
+      .where(eq(notifications.userId, userId))
+      .orderBy(desc(notifications.createdAt));
+  }
+
+  async markNotificationAsRead(notificationId: number): Promise<void> {
+    await db.update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.id, notificationId));
+  }
+
+  async markAllNotificationsAsRead(userId: string): Promise<void> {
+    await db.update(notifications)
+      .set({ isRead: true })
+      .where(eq(notifications.userId, userId));
   }
 }
 

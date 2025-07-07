@@ -40,6 +40,9 @@ export const users = pgTable("users", {
   totalEarnings: decimal("total_earnings", { precision: 10, scale: 2 }).default("0"),
   totalSpent: decimal("total_spent", { precision: 10, scale: 2 }).default("0"),
   responseRate: integer("response_rate").default(100),
+  totalPoints: integer("total_points").default(0),
+  referralCode: varchar("referral_code").unique(),
+  lastLoginDate: varchar("last_login_date"), // YYYY-MM-DD format
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow(),
 });
@@ -150,6 +153,63 @@ export const favorites = pgTable("favorites", {
   pk: primaryKey({ columns: [table.userId, table.agentId] }),
 }));
 
+// Points and Referral System Tables
+export const pointsHistory = pgTable("points_history", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  points: integer("points").notNull(),
+  type: varchar("type").notNull(), // 'earned', 'spent', 'admin_granted'
+  source: varchar("source").notNull(), // 'daily_login', 'referral_signup', 'referral_agent_list', 'referral_purchase', 'admin', 'points_exchange'
+  description: text("description").notNull(),
+  referenceId: varchar("reference_id"), // reference to order, user, etc.
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const userReferrals = pgTable("user_referrals", {
+  id: serial("id").primaryKey(),
+  referrerId: varchar("referrer_id").notNull().references(() => users.id),
+  referredId: varchar("referred_id").notNull().references(() => users.id),
+  referralCode: varchar("referral_code").notNull().unique(),
+  signupBonus: boolean("signup_bonus").default(false),
+  agentListBonus: boolean("agent_list_bonus").default(false),
+  purchaseBonus: boolean("purchase_bonus").default(false),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const dailyLogins = pgTable("daily_logins", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  loginDate: varchar("login_date").notNull(), // YYYY-MM-DD format
+  pointsEarned: integer("points_earned").default(100),
+  createdAt: timestamp("created_at").defaultNow(),
+}, (table) => ({
+  uniqueUserDate: index("unique_user_date").on(table.userId, table.loginDate),
+}));
+
+export const pointsExchange = pgTable("points_exchange", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  pointsSpent: integer("points_spent").notNull(),
+  nairaAmount: decimal("naira_amount", { precision: 10, scale: 2 }).notNull(),
+  exchangeRate: decimal("exchange_rate", { precision: 10, scale: 4 }).notNull(), // points per naira
+  status: varchar("status").default("pending"), // pending, approved, completed, rejected
+  bankDetails: jsonb("bank_details"), // bank account information
+  processedAt: timestamp("processed_at"),
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
+export const notifications = pgTable("notifications", {
+  id: serial("id").primaryKey(),
+  userId: varchar("user_id").notNull().references(() => users.id),
+  type: varchar("type").notNull(), // 'order', 'payment', 'review', 'message', 'system', 'points', 'referral'
+  title: text("title").notNull(),
+  message: text("message").notNull(),
+  isRead: boolean("is_read").default(false),
+  actionUrl: text("action_url"),
+  data: jsonb("data"), // additional data for the notification
+  createdAt: timestamp("created_at").defaultNow(),
+});
+
 // Insert schemas
 export const insertCategorySchema = createInsertSchema(categories).omit({ id: true, createdAt: true });
 export const insertAgentSchema = createInsertSchema(agents).omit({ id: true, createdAt: true, updatedAt: true });
@@ -158,6 +218,11 @@ export const insertReviewSchema = createInsertSchema(reviews).omit({ id: true, c
 export const insertCartItemSchema = createInsertSchema(cartItems).omit({ id: true, createdAt: true });
 export const insertMessageSchema = createInsertSchema(messages).omit({ id: true, createdAt: true });
 export const insertFavoriteSchema = createInsertSchema(favorites).omit({ createdAt: true });
+export const insertPointsHistorySchema = createInsertSchema(pointsHistory).omit({ id: true, createdAt: true });
+export const insertUserReferralSchema = createInsertSchema(userReferrals).omit({ id: true, createdAt: true });
+export const insertDailyLoginSchema = createInsertSchema(dailyLogins).omit({ id: true, createdAt: true });
+export const insertPointsExchangeSchema = createInsertSchema(pointsExchange).omit({ id: true, createdAt: true, processedAt: true });
+export const insertNotificationSchema = createInsertSchema(notifications).omit({ id: true, createdAt: true });
 
 // Types
 export type UpsertUser = {
@@ -227,3 +292,13 @@ export type InsertReview = z.infer<typeof insertReviewSchema>;
 export type InsertCartItem = z.infer<typeof insertCartItemSchema>;
 export type InsertMessage = z.infer<typeof insertMessageSchema>;
 export type InsertFavorite = z.infer<typeof insertFavoriteSchema>;
+export type PointsHistory = typeof pointsHistory.$inferSelect;
+export type UserReferral = typeof userReferrals.$inferSelect;
+export type DailyLogin = typeof dailyLogins.$inferSelect;
+export type PointsExchange = typeof pointsExchange.$inferSelect;
+export type Notification = typeof notifications.$inferSelect;
+export type InsertPointsHistory = z.infer<typeof insertPointsHistorySchema>;
+export type InsertUserReferral = z.infer<typeof insertUserReferralSchema>;
+export type InsertDailyLogin = z.infer<typeof insertDailyLoginSchema>;
+export type InsertPointsExchange = z.infer<typeof insertPointsExchangeSchema>;
+export type InsertNotification = z.infer<typeof insertNotificationSchema>;

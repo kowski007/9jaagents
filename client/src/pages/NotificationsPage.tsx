@@ -38,42 +38,10 @@ export default function NotificationsPage() {
   const queryClient = useQueryClient();
   const [activeTab, setActiveTab] = useState("all");
 
-  // Mock notifications data - replace with real API
-  const notifications: Notification[] = [
-    {
-      id: 1,
-      type: 'order',
-      title: 'New Order Received',
-      message: 'You have received a new order for your "AI Content Writer" agent.',
-      isRead: false,
-      createdAt: '2025-07-07T10:30:00Z',
-      actionUrl: '/seller-dashboard?tab=orders'
-    },
-    {
-      id: 2,
-      type: 'payment',
-      title: 'Payment Received',
-      message: 'Payment of $49.99 has been processed for order #1234.',
-      isRead: false,
-      createdAt: '2025-07-07T09:15:00Z',
-    },
-    {
-      id: 3,
-      type: 'review',
-      title: 'New Review',
-      message: 'Your agent received a 5-star review from a satisfied customer.',
-      isRead: true,
-      createdAt: '2025-07-06T16:45:00Z',
-    },
-    {
-      id: 4,
-      type: 'system',
-      title: 'Platform Update',
-      message: 'New features have been added to the seller dashboard.',
-      isRead: true,
-      createdAt: '2025-07-06T14:20:00Z',
-    }
-  ];
+  const { data: notifications = [], isLoading } = useQuery({
+    queryKey: ['/api/notifications'],
+    enabled: isAuthenticated,
+  });
 
   const markAsReadMutation = useMutation({
     mutationFn: async (notificationId: number) => {

@@ -107,11 +107,13 @@ This is a full-stack AI agent marketplace application built with Express.js, Rea
 ```
 Changelog:
 - July 07, 2025. Enhanced platform with comprehensive features:
-  * Added toast notification system throughout the platform
-  * Created notification page with real-time alerts
-  * Built About and Terms pages with professional content
-  * Enhanced seller dashboard with advanced settings and analytics
-  * Implemented comprehensive admin dashboard with platform management
+  * Added complete points system with earning, spending, and exchange for Naira
+  * Implemented referral system with bonuses for signups, agent listings, and purchases
+  * Created comprehensive notification system with real-time alerts for all events
+  * Built leaderboard system for top sellers, buyers, and points leaders
+  * Added loading spinners and improved user experience across all pages
+  * Enhanced admin dashboard with points management and user oversight
+  * Created About and Terms pages with professional content
   * Improved marketplace design with enhanced search and filtering
   * Added role-based navigation and automatic dashboard redirects
   * Created seller registration modal with professional application process

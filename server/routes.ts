@@ -597,7 +597,111 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Points routes
+  app.post('/api/points/daily-login', isAuthenticated, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user!.claims.sub;
+      const points = await storage.recordDailyLogin(userId);
+      res.json({ message: "Daily login bonus claimed!", points });
+    } catch (error: any) {
+      if (error.message.includes('already claimed')) {
+        return res.status(400).json({ message: "Daily login already claimed today" });
+      }
+      console.error("Error claiming daily login:", error);
+      res.status(500).json({ message: "Failed to claim daily bonus" });
+    }
+  });
+
+  app.post('/api/points/exchange', isAuthenticated, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user!.claims.sub;
+      const { points, bankDetails } = req.body;
+
+      if (!points || points < 1000) {
+        return res.status(400).json({ message: "Minimum exchange is 1,000 points" });
+      }
+
+      const userPoints = await storage.getUserPoints(userId);
+      if (points > userPoints) {
+        return res.status(400).json({ message: "Insufficient points" });
+      }
+
+      // Deduct points and create exchange request
+      await storage.addPoints(userId, -points, 'spent', 'points_exchange', `Exchanged ${points} points for Naira`);
+      
+      // Create notification
+      await storage.createNotification({
+        userId,
+        type: 'points',
+        title: 'Points Exchange Requested',
+        message: `Your request to exchange ${points} points has been submitted and is being processed.`,
+        actionUrl: '/points?tab=exchange'
+      });
+
+      res.json({ message: "Exchange request submitted successfully!" });
+    } catch (error) {
+      console.error("Error processing points exchange:", error);
+      res.status(500).json({ message: "Failed to process exchange" });
+    }
+  });
+
+  app.get('/api/points/history', isAuthenticated, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user!.claims.sub;
+      const history = await storage.getPointsHistory(userId);
+      res.json(history);
+    } catch (error) {
+      console.error("Error fetching points history:", error);
+      res.status(500).json({ message: "Failed to fetch points history" });
+    }
+  });
+
+  // Notifications routes
+  app.get('/api/notifications', isAuthenticated, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user!.claims.sub;
+      const notifications = await storage.getNotifications(userId);
+      res.json(notifications);
+    } catch (error) {
+      console.error("Error fetching notifications:", error);
+      res.status(500).json({ message: "Failed to fetch notifications" });
+    }
+  });
+
+  app.put('/api/notifications/:id/read', isAuthenticated, async (req: AuthenticatedRequest, res) => {
+    try {
+      const notificationId = parseInt(req.params.id);
+      await storage.markNotificationAsRead(notificationId);
+      res.json({ message: "Notification marked as read" });
+    } catch (error) {
+      console.error("Error marking notification as read:", error);
+      res.status(500).json({ message: "Failed to mark notification as read" });
+    }
+  });
+
+  app.put('/api/notifications/mark-all-read', isAuthenticated, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user!.claims.sub;
+      await storage.markAllNotificationsAsRead(userId);
+      res.json({ message: "All notifications marked as read" });
+    } catch (error) {
+      console.error("Error marking all notifications as read:", error);
+      res.status(500).json({ message: "Failed to mark notifications as read" });
+    }
+  });
+
   // Admin routes
+  app.post('/api/admin/give-points', isAuthenticated, isAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const { userId, points, reason } = req.body;
+      await storage.addPoints(userId, points, 'admin_granted', 'admin', reason || 'Admin bonus');
+      res.json({ message: "Points granted successfully!" });
+    } catch (error) {
+      console.error("Error giving points:", error);
+      res.status(500).json({ message: "Failed to give points" });
+    }
+  });
+
   app.get('/api/admin/users', isAuthenticated, isAdmin, async (req, res) => {
     try {
       const users = await storage.getAllUsers();

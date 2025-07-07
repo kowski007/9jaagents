@@ -54,6 +54,9 @@ export default function Header() {
               <Link href="/marketplace" className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">
                 Marketplace
               </Link>
+              <Link href="/leaderboard" className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">
+                Leaderboard
+              </Link>
               <Link href="/about" className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">
                 About
               </Link>
