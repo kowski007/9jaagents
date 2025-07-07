@@ -1,7 +1,12 @@
-import { Link } from "wouter";
+
+import { useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+import { useLocation } from "wouter";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Skeleton } from "@/components/ui/skeleton";
 import { 
   Bot, 
   Shield, 
@@ -16,10 +21,62 @@ import {
   Headphones,
   Palette,
   Search,
-  ShoppingCart
+  ShoppingCart,
+  PenTool, 
+  Code, 
+  Languages,
+  Filter
 } from "lucide-react";
+import AgentCard from "@/components/AgentCard";
 
 export default function Landing() {
+  const [location, setLocation] = useLocation();
+  const [searchQuery, setSearchQuery] = useState("");
+  const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
+
+  // Parse URL params
+  const searchParams = new URLSearchParams(location.split('?')[1] || '');
+  const urlSearch = searchParams.get('search');
+
+  const { data: categories = [], isLoading: categoriesLoading } = useQuery({
+    queryKey: ['/api/categories'],
+  });
+
+  const { data: agents = [], isLoading: agentsLoading } = useQuery({
+    queryKey: ['/api/agents', selectedCategory, urlSearch],
+    queryFn: async () => {
+      const params = new URLSearchParams();
+      if (selectedCategory) params.append('categoryId', selectedCategory.toString());
+      if (urlSearch) params.append('search', urlSearch);
+      
+      const response = await fetch(`/api/agents?${params}`);
+      return response.json();
+    },
+  });
+
+  const { data: users = [] } = useQuery({
+    queryKey: ['/api/users'],
+    enabled: agents.length > 0,
+  });
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (searchQuery.trim()) {
+      setLocation(`/?search=${encodeURIComponent(searchQuery)}`);
+    }
+  };
+
+  const categoryIcons = {
+    "Writing": PenTool,
+    "Coding": Code,
+    "Design": Palette,
+    "Analytics": TrendingUp,
+    "Translation": Languages,
+    "Automation": Bot,
+  };
+
+  const featuredAgents = agents.slice(0, 8);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-900 dark:via-blue-900 dark:to-indigo-900">
       {/* Header */}
@@ -33,11 +90,6 @@ export default function Landing() {
               </span>
             </div>
             <div className="flex items-center space-x-4">
-              <Link href="/marketplace">
-                <Button variant="ghost" className="text-gray-600 hover:text-blue-600">
-                  Browse Agents
-                </Button>
-              </Link>
               <Button 
                 onClick={() => window.location.href = '/api/login'}
                 className="bg-blue-600 hover:bg-blue-700 text-white"
@@ -49,7 +101,7 @@ export default function Landing() {
         </div>
       </header>
 
-      {/* Hero Section */}
+      {/* Hero Section with Search */}
       <section className="py-20 px-4 sm:px-6 lg:px-8">
         <div className="max-w-7xl mx-auto text-center">
           <Badge className="mb-4 bg-blue-100 text-blue-800 hover:bg-blue-200 dark:bg-blue-900 dark:text-blue-200">
@@ -65,13 +117,37 @@ export default function Landing() {
             From customer service to content creation, find the perfect AI solution 
             in our curated marketplace.
           </p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/marketplace">
-              <Button size="lg" className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg">
+          
+          {/* Search Bar */}
+          <form onSubmit={handleSearch} className="max-w-2xl mx-auto mb-8">
+            <div className="flex rounded-lg overflow-hidden shadow-lg">
+              <Input
+                type="text"
+                placeholder="What AI service are you looking for?"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="flex-1 px-6 py-4 text-gray-900 text-lg border-0 focus:ring-0"
+              />
+              <Button 
+                type="submit"
+                size="lg"
+                className="px-8 py-4 bg-blue-600 text-white font-semibold hover:bg-blue-700 transition-colors"
+              >
                 <Search className="mr-2 h-5 w-5" />
-                Explore Agents
+                Search
               </Button>
-            </Link>
+            </div>
+          </form>
+
+          {urlSearch && (
+            <div className="mb-8">
+              <Badge variant="secondary" className="bg-white bg-opacity-20 text-blue-600">
+                Searching for: {urlSearch}
+              </Badge>
+            </div>
+          )}
+
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
             <Button 
               size="lg" 
               variant="outline" 
@@ -90,7 +166,7 @@ export default function Landing() {
         <div className="max-w-7xl mx-auto">
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8 text-center">
             <div>
-              <div className="text-3xl font-bold text-blue-600 mb-2">1,000+</div>
+              <div className="text-3xl font-bold text-blue-600 mb-2">{agents.length || '1,000+'}+</div>
               <div className="text-gray-600 dark:text-gray-300">AI Agents</div>
             </div>
             <div>
@@ -109,96 +185,112 @@ export default function Landing() {
         </div>
       </section>
 
-      {/* Features Section */}
-      <section className="py-20 px-4 sm:px-6 lg:px-8">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-16">
-            <h2 className="text-4xl font-bold mb-4 bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-              Popular AI Agent Categories
+      {/* Categories Section */}
+      <section className="py-16 bg-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">Browse by Category</h2>
+            <p className="text-gray-600">Explore AI agents across different specializations</p>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+            {categoriesLoading ? (
+              Array.from({ length: 6 }).map((_, i) => (
+                <Card key={i} className="text-center p-6">
+                  <CardContent className="p-0">
+                    <Skeleton className="h-12 w-12 mx-auto mb-3 rounded-full" />
+                    <Skeleton className="h-4 w-16 mx-auto mb-2" />
+                    <Skeleton className="h-3 w-12 mx-auto" />
+                  </CardContent>
+                </Card>
+              ))
+            ) : (
+              categories.map((category: any) => {
+                const IconComponent = categoryIcons[category.name as keyof typeof categoryIcons] || Bot;
+                return (
+                  <Card 
+                    key={category.id}
+                    className={`text-center p-6 hover:shadow-lg transition-all cursor-pointer ${
+                      selectedCategory === category.id ? 'border-blue-600' : 'hover:border-blue-600'
+                    }`}
+                    onClick={() => setSelectedCategory(selectedCategory === category.id ? null : category.id)}
+                  >
+                    <CardContent className="p-0">
+                      <IconComponent className="h-12 w-12 text-blue-600 mb-3 mx-auto" />
+                      <h3 className="font-semibold text-gray-900">{category.name}</h3>
+                      <p className="text-sm text-gray-500 mt-1">{category.agentCount} agents</p>
+                    </CardContent>
+                  </Card>
+                );
+              })
+            )}
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Agents Section */}
+      <section className="py-16 bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-12">
+            <h2 className="text-3xl font-bold text-gray-900 mb-4">
+              {urlSearch ? `Search Results for "${urlSearch}"` : 'Featured AI Agents'}
             </h2>
-            <p className="text-xl text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
-              Choose from our curated collection of AI agents designed for different business needs
+            <p className="text-gray-600">
+              {urlSearch ? `Found ${agents.length} agents` : 'Top-rated agents delivering exceptional results'}
             </p>
           </div>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-            <Card className="border-2 border-blue-100 hover:border-blue-200 transition-all duration-300 hover:shadow-lg dark:border-blue-900 dark:hover:border-blue-800">
-              <CardHeader className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full mx-auto mb-4 flex items-center justify-center">
-                  <Headphones className="h-8 w-8 text-white" />
-                </div>
-                <CardTitle className="text-xl">Customer Service</CardTitle>
-                <CardDescription>24/7 automated support and chat agents</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Multi-language support
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Instant responses
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Human handoff
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-purple-100 hover:border-purple-200 transition-all duration-300 hover:shadow-lg dark:border-purple-900 dark:hover:border-purple-800">
-              <CardHeader className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-r from-purple-500 to-purple-600 rounded-full mx-auto mb-4 flex items-center justify-center">
-                  <Palette className="h-8 w-8 text-white" />
-                </div>
-                <CardTitle className="text-xl">Content Creation</CardTitle>
-                <CardDescription>AI-powered writing and creative tools</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Blog posts & articles
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Social media content
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Marketing copy
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
-
-            <Card className="border-2 border-indigo-100 hover:border-indigo-200 transition-all duration-300 hover:shadow-lg dark:border-indigo-900 dark:hover:border-indigo-800">
-              <CardHeader className="text-center">
-                <div className="w-16 h-16 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-full mx-auto mb-4 flex items-center justify-center">
-                  <BarChart3 className="h-8 w-8 text-white" />
-                </div>
-                <CardTitle className="text-xl">Business Analytics</CardTitle>
-                <CardDescription>Data insights and reporting agents</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <ul className="space-y-2 text-sm text-gray-600 dark:text-gray-300">
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Sales reporting
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Performance metrics
-                  </li>
-                  <li className="flex items-center">
-                    <CheckCircle className="h-4 w-4 text-green-500 mr-2" />
-                    Predictive analytics
-                  </li>
-                </ul>
-              </CardContent>
-            </Card>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {agentsLoading ? (
+              Array.from({ length: 8 }).map((_, i) => (
+                <Card key={i} className="bg-white overflow-hidden">
+                  <CardContent className="p-6">
+                    <div className="flex items-center mb-4">
+                      <Skeleton className="h-12 w-12 rounded-full mr-3" />
+                      <div>
+                        <Skeleton className="h-4 w-24 mb-2" />
+                        <Skeleton className="h-3 w-16" />
+                      </div>
+                    </div>
+                    <Skeleton className="h-6 w-full mb-2" />
+                    <Skeleton className="h-4 w-3/4 mb-4" />
+                    <div className="flex items-center justify-between mb-4">
+                      <Skeleton className="h-4 w-20" />
+                      <Skeleton className="h-4 w-16" />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Skeleton className="h-6 w-16" />
+                      <Skeleton className="h-8 w-24" />
+                    </div>
+                  </CardContent>
+                </Card>
+              ))
+            ) : agents.length === 0 ? (
+              <div className="col-span-full text-center py-12">
+                <p className="text-gray-500 text-lg">No agents found.</p>
+                <p className="text-gray-400 mt-2">Try adjusting your search or browse different categories.</p>
+              </div>
+            ) : (
+              featuredAgents.map((agent: any) => {
+                const seller = users.find((u: any) => u.id === agent.sellerId);
+                return (
+                  <AgentCard
+                    key={agent.id}
+                    agent={agent}
+                    seller={seller}
+                  />
+                );
+              })
+            )}
           </div>
+
+          {agents.length > 8 && (
+            <div className="text-center mt-12">
+              <Button variant="outline" size="lg">
+                View All {agents.length} Agents
+              </Button>
+            </div>
+          )}
         </div>
       </section>
 
@@ -256,12 +348,6 @@ export default function Landing() {
             Join thousands of businesses already using AI agents to automate and grow
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center">
-            <Link href="/marketplace">
-              <Button size="lg" className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-3 text-lg">
-                <Search className="mr-2 h-5 w-5" />
-                Browse Agents
-              </Button>
-            </Link>
             <Button 
               size="lg" 
               variant="outline" 
@@ -292,11 +378,6 @@ export default function Landing() {
               <h3 className="text-lg font-semibold mb-4">Quick Links</h3>
               <ul className="space-y-2">
                 <li>
-                  <Link href="/marketplace" className="text-gray-300 hover:text-white transition-colors">
-                    Browse Agents
-                  </Link>
-                </li>
-                <li>
                   <button 
                     onClick={() => window.location.href = '/api/login'}
                     className="text-gray-300 hover:text-white transition-colors"
@@ -305,14 +386,14 @@ export default function Landing() {
                   </button>
                 </li>
                 <li>
-                  <Link href="#" className="text-gray-300 hover:text-white transition-colors">
+                  <a href="#" className="text-gray-300 hover:text-white transition-colors">
                     How it Works
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link href="#" className="text-gray-300 hover:text-white transition-colors">
+                  <a href="#" className="text-gray-300 hover:text-white transition-colors">
                     Pricing
-                  </Link>
+                  </a>
                 </li>
               </ul>
             </div>
@@ -320,24 +401,24 @@ export default function Landing() {
               <h3 className="text-lg font-semibold mb-4">Support</h3>
               <ul className="space-y-2">
                 <li>
-                  <Link href="#" className="text-gray-300 hover:text-white transition-colors">
+                  <a href="#" className="text-gray-300 hover:text-white transition-colors">
                     Help Center
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link href="#" className="text-gray-300 hover:text-white transition-colors">
+                  <a href="#" className="text-gray-300 hover:text-white transition-colors">
                     Contact Us
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link href="#" className="text-gray-300 hover:text-white transition-colors">
+                  <a href="#" className="text-gray-300 hover:text-white transition-colors">
                     API Docs
-                  </Link>
+                  </a>
                 </li>
                 <li>
-                  <Link href="#" className="text-gray-300 hover:text-white transition-colors">
+                  <a href="#" className="text-gray-300 hover:text-white transition-colors">
                     Status
-                  </Link>
+                  </a>
                 </li>
               </ul>
             </div>

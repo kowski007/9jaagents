@@ -20,8 +20,8 @@ function Router() {
 
   return (
     <Switch>
-      <Route path="/" component={isAuthenticated ? Home : Landing} />
-      <Route path="/marketplace" component={Marketplace} />
+      <Route path="/" component={Landing} />
+      <Route path="/marketplace" component={Landing} />
       <Route path="/dashboard" component={Dashboard} />
       <Route path="/seller-dashboard" component={SellerDashboard} />
       <Route path="/admin" component={AdminDashboard} />
