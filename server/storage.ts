@@ -1,3 +1,5 @@
+import { db } from './db';
+import { eq, and, or, like, desc, sql } from 'drizzle-orm';
 import {
   users,
   categories,
@@ -74,588 +76,342 @@ export interface IStorage {
   removeFromFavorites(userId: string, agentId: number): Promise<void>;
 }
 
-export class MemStorage implements IStorage {
-  private users: Map<string, User> = new Map();
-  private categories: Map<number, Category> = new Map();
-  private agents: Map<number, Agent> = new Map();
-  private orders: Map<number, Order> = new Map();
-  private reviews: Map<number, Review> = new Map();
-  private cartItems: Map<number, CartItem> = new Map();
-  private messages: Map<number, Message> = new Map();
-  private favorites: Map<string, Favorite> = new Map();
-
-  private currentCategoryId = 1;
-  private currentAgentId = 1;
-  private currentOrderId = 1;
-  private currentReviewId = 1;
-  private currentCartItemId = 1;
-  private currentMessageId = 1;
-
-  constructor() {
-    this.initializeData();
-  }
-
-  private initializeData() {
-    // Initialize categories
-    const defaultCategories: InsertCategory[] = [
-      { name: "Writing", icon: "fas fa-pen-nib", description: "Content creation and writing services", agentCount: 0 },
-      { name: "Coding", icon: "fas fa-code", description: "Programming and development services", agentCount: 0 },
-      { name: "Design", icon: "fas fa-palette", description: "Graphic design and visual services", agentCount: 0 },
-      { name: "Analytics", icon: "fas fa-chart-line", description: "Data analysis and insights", agentCount: 0 },
-      { name: "Translation", icon: "fas fa-language", description: "Language translation services", agentCount: 0 },
-      { name: "Automation", icon: "fas fa-robot", description: "Process automation and workflows", agentCount: 0 },
-    ];
-
-    defaultCategories.forEach(category => {
-      this.createCategory(category);
-    });
-
-    // Initialize sample agents
-    const sampleAgents: InsertAgent[] = [
-      {
-        title: "AI Content Writer Pro",
-        description: "Professional AI agent for creating high-quality blog posts, articles, and marketing copy. Specializes in SEO-optimized content across various industries.",
-        categoryId: 1, // Writing
-        sellerId: "sample-seller-1",
-        basicPrice: "29.99",
-        standardPrice: "49.99",
-        premiumPrice: "79.99",
-        basicDescription: "Up to 1000 words, Basic SEO optimization, 1 revision",
-        standardDescription: "Up to 2500 words, Advanced SEO optimization, 3 revisions, Keyword research",
-        premiumDescription: "Up to 5000 words, Premium SEO optimization, Unlimited revisions, Keyword research, Content strategy",
-        basicDeliveryDays: 3,
-        standardDeliveryDays: 5,
-        premiumDeliveryDays: 7,
-        imageUrl: "https://images.unsplash.com/photo-1677442136019-21780ecad995?w=400",
-        demoUrl: "https://demo-ai-writer.example.com",
-        sourceCodeUrl: "https://github.com/aiwriter/demo",
-        documentationUrl: "https://docs.aiwriter.com",
-        videoUrl: "https://youtube.com/watch?v=demo-video",
-        tags: ["AI", "Writing", "SEO", "Content"],
-        features: ["Content Writing", "SEO", "Copywriting", "Blog Posts"]
-      },
-      {
-        title: "Code Assistant Expert",
-        description: "Advanced AI coding assistant that helps with full-stack development, debugging, and code optimization. Supports multiple programming languages.",
-        categoryId: 2, // Coding
-        sellerId: "sample-seller-2", 
-        basicPrice: "39.99",
-        standardPrice: "69.99",
-        premiumPrice: "99.99",
-        basicDescription: "Code review, Basic debugging, 1 hour consultation",
-        standardDescription: "Full-stack development, Advanced debugging, Code optimization, 3 hours consultation",
-        premiumDescription: "Complete project development, Architecture design, Performance optimization, Unlimited consultation, Documentation",
-        basicDeliveryDays: 2,
-        standardDeliveryDays: 5,
-        premiumDeliveryDays: 10,
-        imageUrl: "https://images.unsplash.com/photo-1461749280684-dccba630e2f6?w=400",
-        demoUrl: "https://demo-code-assistant.example.com",
-        sourceCodeUrl: "https://github.com/codeassistant/demo",
-        documentationUrl: "https://docs.codeassistant.com",
-        videoUrl: "https://youtube.com/watch?v=code-demo",
-        tags: ["AI", "Programming", "Full-Stack", "Debugging"],
-        features: ["JavaScript", "Python", "React", "Node.js", "Debugging"]
-      },
-      {
-        title: "Simple Task Helper",
-        description: "Free AI assistant for simple daily tasks like email writing, basic calculations, and quick research. Perfect for getting started with AI assistance.",
-        categoryId: 1, // Writing
-        sellerId: "sample-seller-4",
-        basicPrice: "9.99",
-        standardPrice: "19.99",
-        premiumPrice: "29.99",
-        freeDescription: "Free basic task assistance: email templates, simple calculations, quick Q&A, basic research help",
-        freeDeliveryDays: 1,
-        basicDescription: "Enhanced task assistance with templates and priority support",
-        standardDescription: "Advanced automation and personalized responses with faster delivery",
-        premiumDescription: "Complete automation suite with custom integrations and dedicated support",
-        basicDeliveryDays: 2,
-        standardDeliveryDays: 3,
-        premiumDeliveryDays: 5,
-        imageUrl: "https://images.unsplash.com/photo-1531297484001-80022131f5a1?w=400",
-        demoUrl: "https://demo-task-helper.example.com",
-        sourceCodeUrl: "https://github.com/taskhelper/demo",
-        documentationUrl: "https://docs.taskhelper.com",
-        videoUrl: "https://youtube.com/watch?v=task-helper-demo",
-        tags: ["AI", "Productivity", "Free", "Tasks"],
-        features: ["Email Writing", "Calculations", "Research", "Templates"]
-      },
-      {
-        title: "Design Intelligence",
-        description: "Creative AI agent for graphic design, UI/UX design, and visual content creation. Perfect for logos, banners, and complete brand identities.",
-        categoryId: 3, // Design
-        sellerId: "sample-seller-3",
-        basicPrice: "34.99",
-        standardPrice: "59.99",
-        premiumPrice: "89.99",
-        basicDescription: "Logo design, 2 concepts, 2 revisions",
-        standardDescription: "Complete branding package, 5 concepts, 5 revisions, Social media kit",
-        premiumDescription: "Full brand identity, Unlimited concepts, Unlimited revisions, Brand guidelines, Marketing materials",
-        basicDeliveryDays: 3,
-        standardDeliveryDays: 7,
-        premiumDeliveryDays: 14,
-        imageUrl: "https://images.unsplash.com/photo-1541462608143-67571c6738dd?w=400",
-        demoUrl: "https://demo-design-ai.example.com",
-        sourceCodeUrl: "https://github.com/designai/demo",
-        documentationUrl: "https://docs.designai.com",
-        videoUrl: "https://youtube.com/watch?v=design-demo",
-        tags: ["AI", "Design", "Branding", "Graphics"],
-        features: ["Logo Design", "UI/UX", "Branding", "Social Media Graphics"]
-      },
-      {
-        title: "Data Analytics AI",
-        description: "Powerful AI agent for data analysis, visualization, and business intelligence. Transforms raw data into actionable insights and comprehensive reports.",
-        categoryId: 4, // Analytics
-        sellerId: "sample-seller-4",
-        basicPrice: "44.99",
-        standardPrice: "74.99",
-        premiumPrice: "119.99",
-        basicDescription: "Basic data analysis, Simple charts, PDF report",
-        standardDescription: "Advanced analytics, Interactive dashboards, Multiple formats, Trend analysis",
-        premiumDescription: "Comprehensive BI solution, Real-time dashboards, Predictive analytics, Custom integrations, Ongoing support",
-        basicDeliveryDays: 3,
-        standardDeliveryDays: 5,
-        premiumDeliveryDays: 7,
-        imageUrl: "https://images.unsplash.com/photo-1551288049-bebda4e38f71?w=400",
-        demoUrl: "https://demo-analytics-ai.example.com",
-        sourceCodeUrl: "https://github.com/analyticsai/demo",
-        documentationUrl: "https://docs.analyticsai.com",
-        videoUrl: "https://youtube.com/watch?v=analytics-demo",
-        responseTime: "fast",
-        accuracy: "high",
-        modelType: "gpt-4",
-        languages: ["English"],
-        totalOrders: 73,
-        avgRating: 4.6,
-        totalReviews: 45,
-        tags: ["AI", "Analytics", "Data", "Business Intelligence"],
-        features: ["Data Analysis", "Visualization", "Business Intelligence", "Reporting"],
-        useCases: [
-          { title: "Business Intelligence", description: "Transform raw data into actionable business insights" },
-          { title: "Data Visualization", description: "Create compelling charts and dashboards" }
-        ],
-        supportedFormats: ["CSV", "JSON", "Excel", "SQL"],
-        integrations: ["Google Analytics", "Tableau", "Power BI"],
-        apiEndpoints: true
-      },
-      {
-        title: "Global Translator Pro",
-        description: "Multilingual AI agent specializing in accurate translations and localization services. Supports 50+ languages with cultural context awareness.",
-        categoryId: 5, // Translation
-        sellerId: "sample-seller-5",
-        basicPrice: "24.99",
-        standardPrice: "44.99",
-        premiumPrice: "64.99",
-        basicDescription: "Up to 500 words, 1 language pair, Basic translation",
-        standardDescription: "Up to 2000 words, 3 language pairs, Cultural adaptation, Proofreading",
-        premiumDescription: "Up to 5000 words, Unlimited language pairs, Localization, Cultural consulting, Rush delivery",
-        basicDeliveryDays: 1,
-        standardDeliveryDays: 2,
-        premiumDeliveryDays: 3,
-        imageUrl: "https://images.unsplash.com/photo-1543269664-56d93c1b41a6?w=400",
-        demoUrl: "https://demo-translator.example.com",
-        sourceCodeUrl: "https://github.com/translator/demo",
-        documentationUrl: "https://docs.translator.com",
-        videoUrl: "https://youtube.com/watch?v=translator-demo",
-        responseTime: "instant",
-        accuracy: "high",
-        modelType: "gpt-4",
-        languages: ["English", "Spanish", "French", "German", "Chinese"],
-        totalOrders: 201,
-        avgRating: 4.8,
-        totalReviews: 89,
-        tags: ["AI", "Translation", "Multilingual", "Localization"],
-        features: ["Translation", "Localization", "Cultural Adaptation", "Technical Translation"],
-        useCases: [
-          { title: "Document Translation", description: "Professional translation of business documents" },
-          { title: "Website Localization", description: "Adapt content for different markets and cultures" }
-        ],
-        supportedFormats: ["Text", "PDF", "Word", "HTML"],
-        integrations: ["Google Translate", "DeepL", "Microsoft Translator"],
-        apiEndpoints: true
-      },
-      {
-        title: "Workflow Automation Master",
-        description: "Intelligent automation agent that streamlines business processes and workflows. Integrates with popular tools and platforms for maximum efficiency.",
-        categoryId: 6, // Automation
-        sellerId: "sample-seller-6",
-        basicPrice: "54.99",
-        standardPrice: "94.99",
-        premiumPrice: "149.99",
-        basicDescription: "Simple workflow, 2 integrations, Basic setup",
-        standardDescription: "Complex workflows, 5 integrations, Custom triggers, Monitoring",
-        premiumDescription: "Enterprise automation, Unlimited integrations, AI optimization, 24/7 monitoring, Maintenance",
-        basicDeliveryDays: 5,
-        standardDeliveryDays: 7,
-        premiumDeliveryDays: 14,
-        imageUrl: "https://images.unsplash.com/photo-1518186233392-c232efbf2373?w=400",
-        demoUrl: "https://demo-automation.example.com",
-        sourceCodeUrl: "https://github.com/automation/demo",
-        documentationUrl: "https://docs.automation.com",
-        videoUrl: "https://youtube.com/watch?v=automation-demo",
-        responseTime: "moderate",
-        accuracy: "high",
-        modelType: "gpt-4",
-        languages: ["English"],
-        totalOrders: 45,
-        avgRating: 4.9,
-        totalReviews: 32,
-        tags: ["AI", "Automation", "Workflow", "Integration"],
-        features: ["Process Automation", "Workflow Design", "Integration", "Optimization"],
-        useCases: [
-          { title: "Business Process Automation", description: "Automate repetitive business tasks and workflows" },
-          { title: "System Integration", description: "Connect different tools and platforms seamlessly" }
-        ],
-        supportedFormats: ["API", "Webhook", "REST", "GraphQL"],
-        integrations: ["Zapier", "Make", "Microsoft Power Automate", "Slack"],
-        apiEndpoints: true
-      }
-    ];
-
-    sampleAgents.forEach(agent => {
-      this.createAgent(agent);
-    });
-  }
-
+export class PostgreSQLStorage implements IStorage {
   // User operations
   async getUser(id: string): Promise<User | undefined> {
-    return this.users.get(id);
+    const result = await db.select().from(users).where(eq(users.id, id));
+    return result[0];
   }
 
   async upsertUser(userData: UpsertUser): Promise<User> {
-    const existingUser = this.users.get(userData.id);
-    const user: User = {
-      ...userData,
-      createdAt: existingUser?.createdAt || new Date(),
-      updatedAt: new Date(),
-    };
-    this.users.set(userData.id, user);
-    return user;
+    const existing = await this.getUser(userData.id);
+
+    if (existing) {
+      const result = await db
+        .update(users)
+        .set({ ...userData, updatedAt: new Date() })
+        .where(eq(users.id, userData.id))
+        .returning();
+      return result[0];
+    } else {
+      const result = await db
+        .insert(users)
+        .values({ ...userData, createdAt: new Date(), updatedAt: new Date() })
+        .returning();
+      return result[0];
+    }
   }
 
   async updateUserRole(id: string, role: string): Promise<User> {
-    const user = this.users.get(id);
-    if (!user) {
-      throw new Error('User not found');
-    }
-    const updatedUser: User = {
-      ...user,
-      role,
-      updatedAt: new Date(),
-    };
-    this.users.set(id, updatedUser);
-    return updatedUser;
+    const result = await db
+      .update(users)
+      .set({ role, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+
+    if (!result[0]) throw new Error('User not found');
+    return result[0];
   }
 
   async getAllUsers(): Promise<User[]> {
-    return Array.from(this.users.values());
+    return await db.select().from(users).orderBy(desc(users.createdAt));
   }
 
   async toggleUserActiveStatus(id: string): Promise<User> {
-    const user = this.users.get(id);
-    if (!user) {
-      throw new Error('User not found');
-    }
-    const updatedUser: User = {
-      ...user,
-      isActive: !user.isActive,
-      updatedAt: new Date(),
-    };
-    this.users.set(id, updatedUser);
-    return updatedUser;
+    const user = await this.getUser(id);
+    if (!user) throw new Error('User not found');
+
+    const result = await db
+      .update(users)
+      .set({ isActive: !user.isActive, updatedAt: new Date() })
+      .where(eq(users.id, id))
+      .returning();
+
+    return result[0];
   }
 
   async getUserByEmail(email: string): Promise<User | undefined> {
-    for (const user of this.users.values()) {
-      if (user.email === email) {
-        return user;
-      }
-    }
-    return undefined;
+    const result = await db.select().from(users).where(eq(users.email, email));
+    return result[0];
   }
 
   // Category operations
   async getCategories(): Promise<Category[]> {
-    return Array.from(this.categories.values());
+    return await db.select().from(categories).orderBy(categories.name);
   }
 
   async createCategory(categoryData: InsertCategory): Promise<Category> {
-    const category: Category = {
-      id: this.currentCategoryId++,
-      ...categoryData,
-      createdAt: new Date(),
-    };
-    this.categories.set(category.id, category);
-    return category;
+    const result = await db.insert(categories).values(categoryData).returning();
+    return result[0];
   }
 
   // Agent operations
   async getAgents(filters?: { categoryId?: number; search?: string }): Promise<Agent[]> {
-    let agents = Array.from(this.agents.values()).filter(agent => agent.isActive);
+    let query = db.select().from(agents).where(eq(agents.isActive, true));
 
     if (filters?.categoryId) {
-      agents = agents.filter(agent => agent.categoryId === filters.categoryId);
+      query = query.where(eq(agents.categoryId, filters.categoryId));
     }
 
     if (filters?.search) {
-      const search = filters.search.toLowerCase();
-      agents = agents.filter(agent => 
-        agent.title.toLowerCase().includes(search) ||
-        agent.description.toLowerCase().includes(search) ||
-        agent.tags?.some(tag => tag.toLowerCase().includes(search))
+      const searchTerm = `%${filters.search.toLowerCase()}%`;
+      query = query.where(
+        or(
+          like(sql`LOWER(${agents.title})`, searchTerm),
+          like(sql`LOWER(${agents.description})`, searchTerm)
+        )
       );
     }
 
-    return agents.sort((a, b) => (b.avgRating || 0) - (a.avgRating || 0));
+    const result = await query.orderBy(desc(agents.avgRating));
+    return result;
   }
 
   async getAgent(id: number): Promise<Agent | undefined> {
-    return this.agents.get(id);
+    const result = await db.select().from(agents).where(eq(agents.id, id));
+    return result[0];
   }
 
   async getAgentsBySeller(sellerId: string): Promise<Agent[]> {
-    return Array.from(this.agents.values()).filter(agent => agent.sellerId === sellerId);
+    return await db.select().from(agents)
+      .where(eq(agents.sellerId, sellerId))
+      .orderBy(desc(agents.createdAt));
   }
 
   async createAgent(agentData: InsertAgent): Promise<Agent> {
-    const agent: Agent = {
-      id: this.currentAgentId++,
+    const result = await db.insert(agents).values({
       ...agentData,
       createdAt: new Date(),
       updatedAt: new Date(),
-    };
-    this.agents.set(agent.id, agent);
+    }).returning();
 
     // Update category agent count
-    if (agent.categoryId) {
-      const category = this.categories.get(agent.categoryId);
-      if (category) {
-        category.agentCount = (category.agentCount || 0) + 1;
-      }
+    if (agentData.categoryId) {
+      await db
+        .update(categories)
+        .set({ 
+          agentCount: sql`${categories.agentCount} + 1` 
+        })
+        .where(eq(categories.id, agentData.categoryId));
     }
 
-    return agent;
+    return result[0];
   }
 
   async updateAgent(id: number, agentData: Partial<InsertAgent>): Promise<Agent> {
-    const existing = this.agents.get(id);
-    if (!existing) throw new Error("Agent not found");
+    const result = await db
+      .update(agents)
+      .set({ ...agentData, updatedAt: new Date() })
+      .where(eq(agents.id, id))
+      .returning();
 
-    const agent: Agent = {
-      ...existing,
-      ...agentData,
-      updatedAt: new Date(),
-    };
-    this.agents.set(id, agent);
-    return agent;
+    if (!result[0]) throw new Error("Agent not found");
+    return result[0];
   }
 
   async deleteAgent(id: number): Promise<void> {
-    const agent = this.agents.get(id);
-    if (agent) {
-      this.agents.delete(id);
+    const agent = await this.getAgent(id);
 
-      // Update category agent count
-      if (agent.categoryId) {
-        const category = this.categories.get(agent.categoryId);
-        if (category) {
-          category.agentCount = Math.max(0, (category.agentCount || 0) - 1);
-        }
-      }
+    await db.delete(agents).where(eq(agents.id, id));
+
+    // Update category agent count
+    if (agent?.categoryId) {
+      await db
+        .update(categories)
+        .set({ 
+          agentCount: sql`GREATEST(${categories.agentCount} - 1, 0)` 
+        })
+        .where(eq(categories.id, agent.categoryId));
     }
   }
 
   // Order operations
   async getOrders(filters?: { buyerId?: string; sellerId?: string; status?: string }): Promise<Order[]> {
-    let orders = Array.from(this.orders.values());
+    let query = db.select().from(orders);
+    const conditions = [];
 
-    if (filters?.buyerId) {
-      orders = orders.filter(order => order.buyerId === filters.buyerId);
+    if (filters?.buyerId) conditions.push(eq(orders.buyerId, filters.buyerId));
+    if (filters?.sellerId) conditions.push(eq(orders.sellerId, filters.sellerId));
+    if (filters?.status) conditions.push(eq(orders.status, filters.status));
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
     }
 
-    if (filters?.sellerId) {
-      orders = orders.filter(order => order.sellerId === filters.sellerId);
-    }
-
-    if (filters?.status) {
-      orders = orders.filter(order => order.status === filters.status);
-    }
-
-    return orders.sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+    return await query.orderBy(desc(orders.createdAt));
   }
 
   async getOrder(id: number): Promise<Order | undefined> {
-    return this.orders.get(id);
+    const result = await db.select().from(orders).where(eq(orders.id, id));
+    return result[0];
   }
 
   async createOrder(orderData: InsertOrder): Promise<Order> {
-    const order: Order = {
-      id: this.currentOrderId++,
+    const result = await db.insert(orders).values({
       ...orderData,
       createdAt: new Date(),
       updatedAt: new Date(),
-    };
-    this.orders.set(order.id, order);
+    }).returning();
 
     // Update agent total orders
-    const agent = this.agents.get(order.agentId);
-    if (agent) {
-      agent.totalOrders = (agent.totalOrders || 0) + 1;
-    }
+    await db
+      .update(agents)
+      .set({ 
+        totalOrders: sql`${agents.totalOrders} + 1` 
+      })
+      .where(eq(agents.id, orderData.agentId));
 
-    return order;
+    return result[0];
   }
 
   async updateOrder(id: number, orderData: Partial<InsertOrder>): Promise<Order> {
-    const existing = this.orders.get(id);
-    if (!existing) throw new Error("Order not found");
+    const result = await db
+      .update(orders)
+      .set({ ...orderData, updatedAt: new Date() })
+      .where(eq(orders.id, id))
+      .returning();
 
-    const order: Order = {
-      ...existing,
-      ...orderData,
-      updatedAt: new Date(),
-    };
-    this.orders.set(id, order);
-    return order;
+    if (!result[0]) throw new Error("Order not found");
+    return result[0];
   }
 
   // Review operations
   async getReviewsByAgent(agentId: number): Promise<Review[]> {
-    return Array.from(this.reviews.values())
-      .filter(review => review.agentId === agentId)
-      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+    return await db.select().from(reviews)
+      .where(eq(reviews.agentId, agentId))
+      .orderBy(desc(reviews.createdAt));
   }
 
   async createReview(reviewData: InsertReview): Promise<Review> {
-    const review: Review = {
-      id: this.currentReviewId++,
+    const result = await db.insert(reviews).values({
       ...reviewData,
       createdAt: new Date(),
-    };
-    this.reviews.set(review.id, review);
+    }).returning();
 
     // Update agent rating
-    const agent = this.agents.get(review.agentId);
-    if (agent) {
-      const reviews = Array.from(this.reviews.values()).filter(r => r.agentId === review.agentId);
-      const totalRating = reviews.reduce((sum, r) => sum + r.rating, 0);
-      agent.avgRating = totalRating / reviews.length;
-      agent.totalReviews = reviews.length;
-    }
+    const agentReviews = await this.getReviewsByAgent(reviewData.agentId);
+    const totalRating = agentReviews.reduce((sum, r) => sum + r.rating, 0);
+    const avgRating = totalRating / agentReviews.length;
 
-    return review;
+    await db
+      .update(agents)
+      .set({ 
+        avgRating: avgRating,
+        totalReviews: agentReviews.length
+      })
+      .where(eq(agents.id, reviewData.agentId));
+
+    return result[0];
   }
 
   // Cart operations
   async getCartItems(userId: string): Promise<CartItem[]> {
-    return Array.from(this.cartItems.values())
-      .filter(item => item.userId === userId)
-      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+    return await db.select().from(cartItems)
+      .where(eq(cartItems.userId, userId))
+      .orderBy(desc(cartItems.createdAt));
   }
 
   async addToCart(cartItemData: InsertCartItem): Promise<CartItem> {
     // Check if item already exists
-    const existingItem = Array.from(this.cartItems.values()).find(
-      item => item.userId === cartItemData.userId && 
-               item.agentId === cartItemData.agentId && 
-               item.packageType === cartItemData.packageType
-    );
+    const existing = await db.select().from(cartItems)
+      .where(
+        and(
+          eq(cartItems.userId, cartItemData.userId),
+          eq(cartItems.agentId, cartItemData.agentId),
+          eq(cartItems.packageType, cartItemData.packageType)
+        )
+      );
 
-    if (existingItem) {
-      existingItem.quantity = (existingItem.quantity || 1) + (cartItemData.quantity || 1);
-      return existingItem;
+    if (existing[0]) {
+      const result = await db
+        .update(cartItems)
+        .set({ quantity: existing[0].quantity + (cartItemData.quantity || 1) })
+        .where(eq(cartItems.id, existing[0].id))
+        .returning();
+      return result[0];
     }
 
-    const cartItem: CartItem = {
-      id: this.currentCartItemId++,
+    const result = await db.insert(cartItems).values({
       ...cartItemData,
       createdAt: new Date(),
-    };
-    this.cartItems.set(cartItem.id, cartItem);
-    return cartItem;
+    }).returning();
+    return result[0];
   }
 
   async updateCartItem(id: number, cartItemData: Partial<InsertCartItem>): Promise<CartItem> {
-    const existing = this.cartItems.get(id);
-    if (!existing) throw new Error("Cart item not found");
+    const result = await db
+      .update(cartItems)
+      .set(cartItemData)
+      .where(eq(cartItems.id, id))
+      .returning();
 
-    const cartItem: CartItem = {
-      ...existing,
-      ...cartItemData,
-    };
-    this.cartItems.set(id, cartItem);
-    return cartItem;
+    if (!result[0]) throw new Error("Cart item not found");
+    return result[0];
   }
 
   async removeFromCart(id: number): Promise<void> {
-    this.cartItems.delete(id);
+    await db.delete(cartItems).where(eq(cartItems.id, id));
   }
 
   async clearCart(userId: string): Promise<void> {
-    for (const [id, item] of this.cartItems.entries()) {
-      if (item.userId === userId) {
-        this.cartItems.delete(id);
-      }
-    }
+    await db.delete(cartItems).where(eq(cartItems.userId, userId));
   }
 
   // Message operations
   async getMessages(filters: { senderId?: string; receiverId?: string; orderId?: number }): Promise<Message[]> {
-    let messages = Array.from(this.messages.values());
+    let query = db.select().from(messages);
+    const conditions = [];
 
-    if (filters.senderId) {
-      messages = messages.filter(msg => msg.senderId === filters.senderId);
+    if (filters.senderId) conditions.push(eq(messages.senderId, filters.senderId));
+    if (filters.receiverId) conditions.push(eq(messages.receiverId, filters.receiverId));
+    if (filters.orderId) conditions.push(eq(messages.orderId, filters.orderId));
+
+    if (conditions.length > 0) {
+      query = query.where(and(...conditions));
     }
 
-    if (filters.receiverId) {
-      messages = messages.filter(msg => msg.receiverId === filters.receiverId);
-    }
-
-    if (filters.orderId) {
-      messages = messages.filter(msg => msg.orderId === filters.orderId);
-    }
-
-    return messages.sort((a, b) => new Date(a.createdAt!).getTime() - new Date(b.createdAt!).getTime());
+    return await query.orderBy(messages.createdAt);
   }
 
   async createMessage(messageData: InsertMessage): Promise<Message> {
-    const message: Message = {
-      id: this.currentMessageId++,
+    const result = await db.insert(messages).values({
       ...messageData,
       createdAt: new Date(),
-    };
-    this.messages.set(message.id, message);
-    return message;
+    }).returning();
+    return result[0];
   }
 
   async markMessageAsRead(id: number): Promise<void> {
-    const message = this.messages.get(id);
-    if (message) {
-      message.isRead = true;
-    }
+    await db
+      .update(messages)
+      .set({ isRead: true })
+      .where(eq(messages.id, id));
   }
 
   // Favorite operations
   async getFavorites(userId: string): Promise<Favorite[]> {
-    return Array.from(this.favorites.values())
-      .filter(favorite => favorite.userId === userId)
-      .sort((a, b) => new Date(b.createdAt!).getTime() - new Date(a.createdAt!).getTime());
+    return await db.select().from(favorites)
+      .where(eq(favorites.userId, userId))
+      .orderBy(desc(favorites.createdAt));
   }
 
   async addToFavorites(favoriteData: InsertFavorite): Promise<Favorite> {
-    const key = `${favoriteData.userId}-${favoriteData.agentId}`;
-    const favorite: Favorite = {
+    const result = await db.insert(favorites).values({
       ...favoriteData,
       createdAt: new Date(),
-    };
-    this.favorites.set(key, favorite);
-    return favorite;
+    }).returning();
+    return result[0];
   }
 
   async removeFromFavorites(userId: string, agentId: number): Promise<void> {
-    const key = `${userId}-${agentId}`;
-    this.favorites.delete(key);
+    await db.delete(favorites)
+      .where(
+        and(
+          eq(favorites.userId, userId),
+          eq(favorites.agentId, agentId)
+        )
+      );
   }
 }
 
-export const storage = new MemStorage();
+export const storage = new PostgreSQLStorage();
