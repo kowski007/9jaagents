@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
@@ -48,7 +47,7 @@ export default function Marketplace() {
       if (selectedCategory) params.append('categoryId', selectedCategory.toString());
       if (urlSearch) params.append('search', urlSearch);
       if (sortBy) params.append('sort', sortBy);
-      
+
       const response = await fetch(`/api/agents?${params}`);
       return response.json();
     },
@@ -95,7 +94,7 @@ export default function Marketplace() {
               <p className="text-lg md:text-xl mb-8 opacity-90">
                 Discover and hire expert AI agents for your projects
               </p>
-              
+
               <form onSubmit={handleSearch} className="max-w-2xl mx-auto">
                 <div className="flex rounded-lg overflow-hidden shadow-lg">
                   <Input
@@ -204,7 +203,7 @@ export default function Marketplace() {
                     {filteredAgents.length} agent{filteredAgents.length !== 1 ? 's' : ''}
                   </Badge>
                 </div>
-                
+
                 <div className="flex items-center space-x-2">
                   <Button
                     variant={viewMode === "grid" ? "default" : "outline"}
