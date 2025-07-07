@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -17,6 +16,7 @@ import {
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToastEnhanced } from "@/hooks/useToastEnhanced";
+import { supabase } from '@/lib/supabase';
 
 export default function AdminLoginPage() {
   const [, setLocation] = useLocation();
@@ -39,39 +39,25 @@ export default function AdminLoginPage() {
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(credentials),
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: credentials.email,
+        password: credentials.password,
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        
-        // Check if user is admin
-        const userResponse = await fetch('/api/auth/user');
-        if (userResponse.ok) {
-          const userData = await userResponse.json();
-          if (userData.role === 'admin') {
-            showSuccess('Admin login successful');
-            window.location.href = '/admin'; // Force full page reload for admin
-          } else {
-            showError('Access denied. Admin privileges required.');
-          }
-        } else {
-          showError('Failed to verify admin status');
-        }
+      if (error) {
+        showError('Login failed', error.message || 'Invalid credentials');
       } else {
-        const error = await response.json();
-        showError(error.message || 'Invalid credentials');
+        // Check if user is admin (custom claim or metadata)
+        if (data.user && data.user.user_metadata?.role === 'admin') {
+          showSuccess('Admin login successful');
+          setLocation('/admin');
+          window.location.reload();
+        } else {
+          showError('Login failed', 'Not an admin account');
+        }
       }
     } catch (error) {
-      console.error('Login error:', error);
-      showError('Network error. Please try again.');
+      showError('Login failed', 'An error occurred');
     } finally {
       setIsLoading(false);
     }

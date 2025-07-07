@@ -1,11 +1,37 @@
+import 'dotenv/config';
 import express, { type Request, Response, NextFunction } from "express";
+import session from 'express-session';
+import pgSession from 'connect-pg-simple';
+import { Pool } from 'pg';
 import { registerRoutes } from "./routes";
 import { setupVite, serveStatic, log } from "./vite";
 import { initializeDatabase } from "./db";
+import cors from 'cors';
 
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
+
+// Enable CORS for local development with credentials
+app.use(cors({
+  origin: 'http://localhost:5173', // Change to your frontend URL if different
+  credentials: true,
+}));
+
+// Use PostgreSQL (Neon) for session storage
+const PgSession = pgSession(session);
+const pgPool = new Pool({ connectionString: process.env.DATABASE_URL });
+app.use(session({
+  store: new PgSession({ pool: pgPool, tableName: 'session' }),
+  secret: process.env.SESSION_SECRET || 'default-secret-key-for-development',
+  resave: false,
+  saveUninitialized: false,
+  cookie: {
+    httpOnly: true,
+    secure: false, // Set to true in production
+    maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
+  },
+}));
 
 app.use((req, res, next) => {
   const start = Date.now();

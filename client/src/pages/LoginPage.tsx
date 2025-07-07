@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Eye, EyeOff } from "lucide-react";
 import { useToastEnhanced } from "@/hooks/useToastEnhanced";
 import Layout from "@/components/Layout";
+import { supabase } from '@/lib/supabase';
 
 export default function LoginPage() {
   const [, setLocation] = useLocation();
@@ -24,35 +24,17 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(formData),
-        credentials: 'include'
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: formData.email,
+        password: formData.password,
       });
-
-      if (response.ok) {
-        const data = await response.json();
-        showSuccess("Success!", "Logged in successfully!");
-        
-        // Redirect based on user role
-        if (data.user?.role === 'admin') {
-          setLocation('/admin');
-        } else if (data.user?.role === 'seller') {
-          setLocation('/seller-dashboard');
-        } else {
-          setLocation('/dashboard');
-        }
-        
-        // Reload to update auth state
-        window.location.reload();
-      } else {
-        const error = await response.json();
+      if (error) {
         showError("Error", error.message || "Failed to log in");
+      } else {
+        showSuccess("Success!", "Logged in successfully!");
+        setLocation('/dashboard');
+        window.location.reload();
       }
     } catch (error) {
       showError("Error", "Failed to log in. Please try again.");

@@ -29,6 +29,13 @@ export default function Header() {
     enabled: isAuthenticated,
   });
 
+  const { data: notifications = [] } = useQuery({
+    queryKey: ['/api/notifications'],
+    enabled: isAuthenticated,
+  });
+
+  const unreadCount = notifications.filter(notification => !notification.read).length;
+
   const handleSearch = (e: React.FormEvent) => {
     e.preventDefault();
     if (searchQuery.trim()) {
@@ -55,7 +62,7 @@ export default function Header() {
                 Marketplace
               </Link>
               <Link href="/leaderboard" className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">
-                Leaderboard
+                Rank
               </Link>
               <Link href="/about" className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">
                 About
@@ -70,7 +77,7 @@ export default function Header() {
                   placeholder="Search AI agents..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="w-64 pl-10"
+                  className="w-54 pl-10"
                 />
                 <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
               </form>
@@ -111,25 +118,27 @@ export default function Header() {
                     onClick={() => setLocation('/notifications')}
                   >
                     <Bell className="h-5 w-5" />
-                    <Badge 
-                      variant="destructive" 
-                      className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs"
-                    >
-                      3
-                    </Badge>
+                    {unreadCount > 0 && (
+                      <Badge 
+                        variant="destructive" 
+                        className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs"
+                      >
+                        {unreadCount}
+                      </Badge>
+                    )}
                   </Button>
 
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" size="sm" className="flex items-center space-x-2">
                         <Avatar className="h-8 w-8">
-                          <AvatarImage src={user?.profileImageUrl || ""} />
+                          <AvatarImage src={`https://api.dicebear.com/7.x/personas/svg?seed=${encodeURIComponent(user?.email || user?.id || 'user')}`} />
                           <AvatarFallback>
-                            {user?.firstName?.[0] || user?.email?.[0] || "U"}
+                            {(user?.email?.[0] || user?.id?.[0] || "U").toUpperCase()}
                           </AvatarFallback>
                         </Avatar>
                         <span className="hidden md:block">
-                          {user?.firstName || user?.email?.split('@')[0] || "User"}
+                          {user?.email?.split('@')[0] || user?.id || "User"}
                         </span>
                       </Button>
                     </DropdownMenuTrigger>

@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { useLocation } from "wouter";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -9,6 +8,7 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Eye, EyeOff, Gift } from "lucide-react";
 import { useToastEnhanced } from "@/hooks/useToastEnhanced";
 import Layout from "@/components/Layout";
+import { supabase } from '@/lib/supabase';
 
 export default function SignupPage() {
   const [, setLocation] = useLocation();
@@ -51,32 +51,27 @@ export default function SignupPage() {
     setIsLoading(true);
 
     try {
-      const response = await fetch('/api/auth/signup', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          firstName: formData.firstName,
-          lastName: formData.lastName,
-          email: formData.email,
-          password: formData.password,
-          referralCode: formData.referralCode || undefined
-        }),
+      const { data, error } = await supabase.auth.signUp({
+        email: formData.email,
+        password: formData.password,
+        options: {
+          data: {
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            referralCode: formData.referralCode,
+          }
+        }
       });
 
-      if (response.ok) {
-        showSuccess("Success!", "Account created successfully! You can now log in.");
-        if (formData.referralCode) {
-          showSuccess("Bonus!", "You've earned 500 bonus points for being referred!");
-        }
-        setLocation('/login');
+      if (error) {
+        showError("Error", error.message || "Failed to sign up");
       } else {
-        const error = await response.json();
-        showError("Error", error.message || "Failed to create account");
+        showSuccess("Success!", "Account created! Check your email to verify.");
+        setLocation('/dashboard');
+        window.location.reload();
       }
     } catch (error) {
-      showError("Error", "Failed to create account. Please try again.");
+      showError("Error", "Failed to sign up. Please try again.");
     } finally {
       setIsLoading(false);
     }

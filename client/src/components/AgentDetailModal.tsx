@@ -153,7 +153,7 @@ export default function AgentDetailModal({ agent, seller, isOpen, onClose }: Age
                     ))}
                   </div>
                   <span className="text-sm text-gray-600">
-                    {agent.avgRating?.toFixed(1) || "0.0"} ({agent.totalReviews || 0} reviews)
+                    {typeof agent.avgRating === 'number' ? agent.avgRating.toFixed(1) : '0.0'} ({agent.totalReviews || 0} reviews)
                   </span>
                 </div>
               </div>

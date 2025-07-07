@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,7 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Bot, Mail, Lock, User, Eye, EyeOff } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { useMutation } from "@tanstack/react-query";
-import { apiRequest } from "@/lib/queryClient";
+import { supabase } from '@/lib/supabase';
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -37,12 +36,13 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   });
 
   const loginMutation = useMutation({
-    mutationFn: (data: typeof loginData) => 
-      apiRequest("/api/auth/login", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      }),
+    mutationFn: async (data: typeof loginData) => {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: data.password,
+      });
+      if (error) throw new Error(error.message);
+    },
     onSuccess: () => {
       toast({
         title: "Success",
@@ -61,12 +61,20 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
   });
 
   const signupMutation = useMutation({
-    mutationFn: (data: typeof signupData) => 
-      apiRequest("/api/auth/signup", {
-        method: "POST",
-        body: JSON.stringify(data),
-        headers: { "Content-Type": "application/json" },
-      }),
+    mutationFn: async (data: typeof signupData) => {
+      if (data.password !== data.confirmPassword) throw new Error('Passwords do not match');
+      const { error } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            firstName: data.firstName,
+            lastName: data.lastName,
+          }
+        }
+      });
+      if (error) throw new Error(error.message);
+    },
     onSuccess: () => {
       toast({
         title: "Success",

@@ -1,4 +1,3 @@
-
 import { ReactNode } from "react";
 import { useLocation } from "wouter";
 import Header from "./Header";
@@ -19,8 +18,8 @@ export default function Layout({ children, showFooter = true }: LayoutProps) {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {!isDashboard && <Header />}
-      <main className={isDashboard ? "flex-1" : "flex-1"}>
+      <Header />
+      <main className={"flex-1"}>
         {children}
       </main>
       {shouldShowFooter && <Footer />}

@@ -1,7 +1,8 @@
 import type { Express, Request, Response, RequestHandler } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { setupAuth, isAuthenticated } from "./replitAuth";
+import bcrypt from 'bcrypt';
+import { z } from 'zod';
 
 // Admin middleware
 const isAdmin: RequestHandler = async (req, res, next) => {
@@ -17,6 +18,16 @@ const isAdmin: RequestHandler = async (req, res, next) => {
 
   next();
 };
+
+// Auth middleware
+export const isAuthenticated: RequestHandler = (req, res, next) => {
+  // Accept both session and legacy user for compatibility
+  if ((req.session && req.session.userId) || (req.user && req.user.claims && req.user.claims.sub)) {
+    return next();
+  }
+  return res.status(401).json({ message: "Unauthorized" });
+};
+
 import { 
   insertAgentSchema, 
   insertOrderSchema, 
@@ -25,8 +36,6 @@ import {
   insertMessageSchema,
   insertFavoriteSchema 
 } from "@shared/schema";
-import bcrypt from 'bcrypt';
-import { z } from 'zod';
 
 interface AuthenticatedRequest extends Request {
   user?: {
@@ -41,9 +50,6 @@ interface AuthenticatedRequest extends Request {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Auth middleware
-  await setupAuth(app);
-
   // Email auth schemas
   const loginSchema = z.object({
     email: z.string().email(),
@@ -58,9 +64,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // Auth routes
-  app.get('/api/auth/user', isAuthenticated, async (req: AuthenticatedRequest, res) => {
+  app.get('/api/auth/user', isAuthenticated, async (req: Request, res) => {
     try {
-      const userId = req.user!.claims.sub;
+      // Prefer session userId, fallback to req.user.claims.sub
+      const userId = req.session?.userId || req.user?.claims?.sub;
+      if (!userId) return res.status(401).json({ message: "Unauthorized" });
       const user = await storage.getUser(userId);
       res.json(user);
     } catch (error) {
@@ -104,6 +112,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Give welcome bonus points
       await storage.addPoints(userId, 1000, 'earned', 'welcome_bonus', 'Welcome to AgentMarket!');
 
+      // Set session for new user
+      req.session.userId = userId;
+
       res.status(201).json({ message: "User created successfully" });
     } catch (error) {
       console.error("Error creating user:", error);
@@ -131,22 +142,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(401).json({ message: "Invalid credentials" });
       }
 
-      // Create session
-      req.login({ 
-        claims: { 
-          sub: user.id, 
-          email: user.email, 
-          first_name: user.firstName, 
-          last_name: user.lastName 
-        },
-        expires_at: Math.floor(Date.now() / 1000) + (7 * 24 * 60 * 60) // 7 days
-      }, (err) => {
-        if (err) {
-          console.error("Session error:", err);
-          return res.status(500).json({ message: "Failed to create session" });
-        }
-        res.json({ message: "Login successful", user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName } });
-      });
+      // Set session for logged in user
+      req.session.userId = user.id;
+
+      res.json({ message: "Login successful", user: { id: user.id, email: user.email, firstName: user.firstName, lastName: user.lastName } });
     } catch (error) {
       console.error("Error logging in user:", error);
       if (error instanceof z.ZodError) {
