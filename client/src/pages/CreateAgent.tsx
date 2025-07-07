@@ -48,6 +48,16 @@ export default function ListAgent() {
     freeDeliveryDays: "",
     tags: [] as string[],
     features: [] as string[],
+    useCases: [] as Array<{ title: string; description: string }>,
+    supportedFormats: [] as string[],
+    integrations: [] as string[],
+    apiEndpoints: false,
+    responseTime: "",
+    accuracy: "",
+    modelType: "",
+    trainingData: "",
+    languages: [] as string[],
+    industries: [] as string[],
     imageUrl: "",
     demoUrl: "",
     sourceCodeUrl: "",
@@ -266,12 +276,13 @@ export default function ListAgent() {
               {/* Use Cases Section */}
               <div>
                 <Label>Use Cases</Label>
+                <p className="text-sm text-gray-500 mb-2">Describe specific scenarios where your agent excels</p>
                 <div className="space-y-3">
                   {formData.useCases?.map((useCase, index) => (
                     <Card key={index} className="p-4">
                       <div className="flex justify-between items-start mb-2">
                         <Input
-                          placeholder="Use case title"
+                          placeholder="Use case title (e.g., Content Creation, Customer Support)"
                           value={useCase.title}
                           onChange={(e) => {
                             const updated = [...(formData.useCases || [])];
@@ -293,7 +304,7 @@ export default function ListAgent() {
                         </Button>
                       </div>
                       <Textarea
-                        placeholder="Describe this use case..."
+                        placeholder="Describe how your agent solves this specific problem..."
                         value={useCase.description}
                         onChange={(e) => {
                           const updated = [...(formData.useCases || [])];
@@ -316,6 +327,107 @@ export default function ListAgent() {
                     Add Use Case
                   </Button>
                 </div>
+              </div>
+
+              {/* Agent Specifications */}
+              <div>
+                <Label>Agent Specifications</Label>
+                <p className="text-sm text-gray-500 mb-4">Technical details about your agent's capabilities</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="responseTime">Response Time</Label>
+                    <Select 
+                      value={formData.responseTime || ''} 
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, responseTime: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select response time" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="instant">Instant (< 1 second)</SelectItem>
+                        <SelectItem value="fast">Fast (1-5 seconds)</SelectItem>
+                        <SelectItem value="moderate">Moderate (5-15 seconds)</SelectItem>
+                        <SelectItem value="slow">Slow (15+ seconds)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="accuracy">Accuracy Level</Label>
+                    <Select 
+                      value={formData.accuracy || ''} 
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, accuracy: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select accuracy level" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="high">High (95%+)</SelectItem>
+                        <SelectItem value="medium">Medium (85-95%)</SelectItem>
+                        <SelectItem value="basic">Basic (75-85%)</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </div>
+
+              {/* AI Model Information */}
+              <div>
+                <Label>AI Model Information</Label>
+                <p className="text-sm text-gray-500 mb-4">Details about the underlying AI technology</p>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <Label htmlFor="modelType">Model Type</Label>
+                    <Select 
+                      value={formData.modelType || ''} 
+                      onValueChange={(value) => setFormData(prev => ({ ...prev, modelType: value }))}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select model type" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="gpt-4">GPT-4</SelectItem>
+                        <SelectItem value="gpt-3.5">GPT-3.5</SelectItem>
+                        <SelectItem value="claude">Claude</SelectItem>
+                        <SelectItem value="gemini">Gemini</SelectItem>
+                        <SelectItem value="custom">Custom Model</SelectItem>
+                        <SelectItem value="fine-tuned">Fine-tuned Model</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div>
+                    <Label htmlFor="trainingData">Training Data</Label>
+                    <Input
+                      id="trainingData"
+                      value={formData.trainingData || ''}
+                      onChange={(e) => setFormData(prev => ({ ...prev, trainingData: e.target.value }))}
+                      placeholder="e.g., Industry-specific, General knowledge"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Languages and Localization */}
+              <div>
+                <Label>Languages Supported</Label>
+                <Input
+                  placeholder="e.g., English, Spanish, French, German (comma separated)"
+                  onChange={(e) => {
+                    const languages = e.target.value.split(',').map(lang => lang.trim()).filter(Boolean);
+                    setFormData(prev => ({ ...prev, languages: languages }));
+                  }}
+                />
+              </div>
+
+              {/* Industries and Target Audience */}
+              <div>
+                <Label>Target Industries</Label>
+                <Input
+                  placeholder="e.g., Healthcare, Finance, Education, E-commerce (comma separated)"
+                  onChange={(e) => {
+                    const industries = e.target.value.split(',').map(ind => ind.trim()).filter(Boolean);
+                    setFormData(prev => ({ ...prev, industries: industries }));
+                  }}
+                />
               </div>
 
               {/* Technical Specifications */}

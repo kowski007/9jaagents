@@ -72,6 +72,16 @@ export const agents = pgTable("agents", {
   premiumDeliveryDays: integer("premium_delivery_days"),
   tags: text("tags").array(),
   features: text("features").array(),
+  useCases: jsonb("use_cases"), // Array of {title, description} objects
+  supportedFormats: text("supported_formats").array(),
+  integrations: text("integrations").array(),
+  apiEndpoints: boolean("api_endpoints").default(false),
+  responseTime: text("response_time"), // instant, fast, moderate, slow
+  accuracy: text("accuracy"), // high, medium, basic
+  modelType: text("model_type"), // gpt-4, gpt-3.5, claude, etc.
+  trainingData: text("training_data"),
+  languages: text("languages").array(),
+  industries: text("industries").array(),
   imageUrl: text("image_url"), // Agent avatar/thumbnail
   demoUrl: text("demo_url"), // Live preview/demo link
   sourceCodeUrl: text("source_code_url"), // GitHub/code repository
@@ -178,7 +188,7 @@ export type Agent = {
   standardDeliveryDays?: number | null;
   premiumDeliveryDays?: number | null;
   tags?: string[];
-  demoUrl?: string;
+  features?: string[] | null;
   useCases?: Array<{
     title: string;
     description: string;
@@ -186,8 +196,14 @@ export type Agent = {
   supportedFormats?: string[];
   integrations?: string[];
   apiEndpoints?: boolean;
-  features?: string[] | null;
+  responseTime?: string;
+  accuracy?: string;
+  modelType?: string;
+  trainingData?: string;
+  languages?: string[];
+  industries?: string[];
   imageUrl?: string | null;
+  demoUrl?: string;
   sourceCodeUrl?: string | null;
   documentationUrl?: string | null;
   videoUrl?: string | null;
