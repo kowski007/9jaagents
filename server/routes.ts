@@ -72,7 +72,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Email signup
   app.post('/api/auth/signup', async (req, res) => {
     try {
-      const { firstName, lastName, email, password } = signupSchema.parse(req.body);
+      const { firstName, lastName, email, password, referralCode } = signupSchema.extend({
+        referralCode: z.string().optional()
+      }).parse(req.body);
 
       // Check if user already exists
       const existingUser = await storage.getUserByEmail(email);
@@ -93,6 +95,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
         profileImageUrl: null,
         hashedPassword,
       });
+
+      // Process referral if provided
+      if (referralCode) {
+        await storage.processReferralSignup(referralCode, userId);
+      }
+
+      // Give welcome bonus points
+      await storage.addPoints(userId, 1000, 'earned', 'welcome_bonus', 'Welcome to AgentMarket!');
 
       res.status(201).json({ message: "User created successfully" });
     } catch (error) {
@@ -215,6 +225,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         sellerId: userId,
       });
       const agent = await storage.createAgent(agentData);
+
+      // Process referral bonus for agent listing
+      await storage.processReferralAgentList(userId);
+
+      // Award points for listing an agent
+      await storage.addPoints(userId, 2000, 'earned', 'agent_listed', 'Agent listing bonus');
+
       res.status(201).json(agent);
     } catch (error) {
       console.error("Error creating agent:", error);
@@ -359,6 +376,41 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
       const orderData = insertOrderSchema.partial().parse(req.body);
       const order = await storage.updateOrder(id, orderData);
+      
+      // Create notifications for status changes
+      if (orderData.status) {
+        const statusMessages = {
+          'in_progress': 'Your order is now in progress',
+          'completed': 'Your order has been completed',
+          'cancelled': 'Your order has been cancelled',
+          'disputed': 'Your order is under dispute review'
+        };
+        
+        const message = statusMessages[orderData.status as keyof typeof statusMessages];
+        
+        if (message) {
+          // Notify buyer
+          await storage.createNotification({
+            userId: existing.buyerId,
+            type: 'order',
+            title: 'Order Status Updated',
+            message: message,
+            actionUrl: `/orders/${id}`
+          });
+          
+          // Notify seller if status is disputed or cancelled
+          if (orderData.status === 'disputed' || orderData.status === 'cancelled') {
+            await storage.createNotification({
+              userId: existing.sellerId,
+              type: 'order',
+              title: 'Order Status Updated',
+              message: `Order #${id} status changed to ${orderData.status}`,
+              actionUrl: `/orders/${id}`
+            });
+          }
+        }
+      }
+      
       res.json(order);
     } catch (error) {
       console.error("Error updating order:", error);
@@ -1217,6 +1269,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
           status: 'paid'
         });
         
+        // Process referral bonus for purchase
+        await storage.processReferralPurchase(userId, price);
+        
+        // Award purchase points to buyer
+        await storage.addPoints(userId, Math.floor(price * 0.02), 'earned', 'purchase_bonus', `Purchase bonus for ${agent.title}`);
+        
         // Add to seller wallet (minus commission)
         const commission = price * 0.1;
         const sellerAmount = price - commission;
@@ -1244,6 +1302,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
           orderId: order.id,
           amount: commission.toString(),
           percentage: '10.00'
+        });
+        
+        // Create notifications
+        await storage.createNotification({
+          userId: userId,
+          type: 'order',
+          title: 'Purchase Successful',
+          message: `Your purchase of ${agent.title} (${tier}) has been completed successfully.`,
+          actionUrl: `/orders/${order.id}`
+        });
+        
+        await storage.createNotification({
+          userId: agent.sellerId,
+          type: 'sale',
+          title: 'New Sale',
+          message: `Your agent "${agent.title}" has been purchased (${tier} package).`,
+          actionUrl: `/orders/${order.id}`
         });
         
         res.json({ message: "Purchase successful", order });

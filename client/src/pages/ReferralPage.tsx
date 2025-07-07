@@ -75,14 +75,14 @@ export default function ReferralPage() {
   };
 
   const shareReferralLink = () => {
-    const referralLink = `${window.location.origin}?ref=${currentReferralData.referralCode}`;
+    const referralLink = `${window.location.origin}/signup?ref=${currentReferralData.referralCode}`;
     navigator.clipboard.writeText(referralLink);
     showSuccess("Copied!", "Referral link copied to clipboard");
   };
 
   const shareOnSocial = (platform: string) => {
-    const referralLink = `${window.location.origin}?ref=${currentReferralData.referralCode}`;
-    const message = "Join AgentMarket and discover amazing AI agents! Use my referral code to get started.";
+    const referralLink = `${window.location.origin}/signup?ref=${currentReferralData.referralCode}`;
+    const message = "Join AgentMarket and discover amazing AI agents! Use my referral code to get started and earn bonus points!";
     
     let shareUrl = "";
     switch(platform) {

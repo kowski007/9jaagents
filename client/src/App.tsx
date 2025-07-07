@@ -27,6 +27,8 @@ import LeaderboardPage from "@/pages/LeaderboardPage";
 import WalletPage from "@/pages/WalletPage";
 import SellerWalletPage from "@/pages/SellerWalletPage";
 import AdminLoginPage from "@/pages/AdminLoginPage";
+import SignupPage from "@/pages/SignupPage";
+import LoginPage from "@/pages/LoginPage";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -37,23 +39,22 @@ function Router() {
       <Switch>
         <Route path="/" component={Landing} />
         <Route path="/marketplace" component={ImprovedMarketplace} />
+        <Route path="/create-agent" component={ListAgent} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/seller-dashboard" component={SellerDashboard} />
-        <Route path="/admin-login" component={AdminLoginPage} />
-        <Route path="/admin" component={AdminDashboard} />
-        <Route path="/enhanced-admin" component={EnhancedAdminDashboard} />
-        <Route path="/super-admin" component={SuperAdminDashboard} />
-        <Route path="/list-agent" component={ListAgent} />
-        <Route path="/create-agent" component={ListAgent} />
         <Route path="/checkout" component={Checkout} />
-        <Route path="/notifications" component={NotificationsPage} />
-        <Route path="/about" component={AboutPage} />
-        <Route path="/terms" component={TermsPage} />
         <Route path="/points" component={PointsPage} />
         <Route path="/referrals" component={ReferralPage} />
+        <Route path="/notifications" component={NotificationsPage} />
         <Route path="/leaderboard" component={LeaderboardPage} />
         <Route path="/wallet" component={WalletPage} />
         <Route path="/seller-wallet" component={SellerWalletPage} />
+        <Route path="/about" component={AboutPage} />
+        <Route path="/terms" component={TermsPage} />
+        <Route path="/signup" component={SignupPage} />
+        <Route path="/login" component={LoginPage} />
+        <Route path="/admin-login" component={AdminLoginPage} />
+        <Route path="/admin" component={AdminDashboard} />
         <Route component={NotFound} />
       </Switch>
     </>

@@ -605,29 +605,167 @@ export class PostgreSQLStorage implements IStorage {
   }
 
   async getReferralsByUser(userId: string): Promise<any[]> {
-    // For now, return empty array since referral table doesn't exist yet
-    // In a real implementation, you'd query a referrals table
-    return [];
+    try {
+      // Get referrals where this user is the referrer
+      const referrals = await db.select().from(pointsHistory)
+        .where(
+          and(
+            eq(pointsHistory.userId, userId),
+            like(pointsHistory.source, 'referral_%')
+          )
+        )
+        .orderBy(desc(pointsHistory.createdAt));
+
+      // Group by referenceId to get unique referrals
+      const uniqueReferrals = referrals.reduce((acc, referral) => {
+        if (referral.referenceId && !acc.find(r => r.referenceId === referral.referenceId)) {
+          acc.push({
+            id: referral.id,
+            referenceId: referral.referenceId,
+            name: `User ${referral.referenceId.split('_')[1] || 'Unknown'}`,
+            email: `user${referral.referenceId.split('_')[1] || 'unknown'}@example.com`,
+            signupDate: referral.createdAt.toISOString().split('T')[0],
+            status: referral.source.includes('purchase') ? 'completed' : 
+                   referral.source.includes('agent_list') ? 'active' : 'pending',
+            totalEarned: referrals
+              .filter(r => r.referenceId === referral.referenceId)
+              .reduce((sum, r) => sum + r.points, 0)
+          });
+        }
+        return acc;
+      }, [] as any[]);
+
+      return uniqueReferrals;
+    } catch (error) {
+      console.error("Error getting referrals:", error);
+      return [];
+    }
   }
 
   async getReferralEarnings(userId: string, period: 'total' | 'month' | 'pending'): Promise<number> {
-    // Get referral-related points from points history
-    let query = db.select().from(pointsHistory)
-      .where(
-        and(
-          eq(pointsHistory.userId, userId),
-          like(pointsHistory.source, '%referral%')
-        )
-      );
+    try {
+      // Get referral-related points from points history
+      let query = db.select().from(pointsHistory)
+        .where(
+          and(
+            eq(pointsHistory.userId, userId),
+            like(pointsHistory.source, 'referral_%')
+          )
+        );
 
-    if (period === 'month') {
-      const monthAgo = new Date();
-      monthAgo.setMonth(monthAgo.getMonth() - 1);
-      query = query.where(sql`${pointsHistory.createdAt} >= ${monthAgo.toISOString()}`);
+      if (period === 'month') {
+        const monthAgo = new Date();
+        monthAgo.setMonth(monthAgo.getMonth() - 1);
+        query = query.where(sql`${pointsHistory.createdAt} >= ${monthAgo.toISOString()}`);
+      }
+
+      const referralPoints = await query;
+      return referralPoints.reduce((sum, point) => sum + point.points, 0);
+    } catch (error) {
+      console.error("Error getting referral earnings:", error);
+      return 0;
     }
+  }
 
-    const referralPoints = await query;
-    return referralPoints.reduce((sum, point) => sum + point.points, 0);
+  async processReferralSignup(referrerCode: string, newUserId: string): Promise<void> {
+    try {
+      // Find the referrer by referral code
+      const referrer = await db.select().from(users)
+        .where(eq(users.referralCode, referrerCode))
+        .limit(1);
+
+      if (referrer[0]) {
+        // Award points to referrer for signup
+        await this.addPoints(
+          referrer[0].id, 
+          1000, 
+          'earned', 
+          'referral_signup', 
+          'Referral signup bonus', 
+          `ref_signup_${newUserId}`
+        );
+
+        // Award points to new user for being referred
+        await this.addPoints(
+          newUserId, 
+          500, 
+          'earned', 
+          'referral_welcome', 
+          'Welcome bonus for being referred', 
+          `ref_welcome_${referrer[0].id}`
+        );
+
+        console.log(`Referral processed: ${referrer[0].id} referred ${newUserId}`);
+      }
+    } catch (error) {
+      console.error("Error processing referral signup:", error);
+    }
+  }
+
+  async processReferralAgentList(sellerId: string): Promise<void> {
+    try {
+      // Check if this seller was referred
+      const welcomeBonus = await db.select().from(pointsHistory)
+        .where(
+          and(
+            eq(pointsHistory.userId, sellerId),
+            eq(pointsHistory.source, 'referral_welcome')
+          )
+        )
+        .limit(1);
+
+      if (welcomeBonus[0] && welcomeBonus[0].referenceId) {
+        const referrerId = welcomeBonus[0].referenceId.replace('ref_welcome_', '');
+        
+        // Award points to referrer for agent listing
+        await this.addPoints(
+          referrerId, 
+          3000, 
+          'earned', 
+          'referral_agent_list', 
+          'Referral agent listing bonus', 
+          `ref_agent_${sellerId}`
+        );
+
+        console.log(`Referral agent list bonus: ${referrerId} gets 3000 points for ${sellerId} listing agent`);
+      }
+    } catch (error) {
+      console.error("Error processing referral agent list:", error);
+    }
+  }
+
+  async processReferralPurchase(buyerId: string, amount: number): Promise<void> {
+    try {
+      // Check if this buyer was referred
+      const welcomeBonus = await db.select().from(pointsHistory)
+        .where(
+          and(
+            eq(pointsHistory.userId, buyerId),
+            eq(pointsHistory.source, 'referral_welcome')
+          )
+        )
+        .limit(1);
+
+      if (welcomeBonus[0] && welcomeBonus[0].referenceId) {
+        const referrerId = welcomeBonus[0].referenceId.replace('ref_welcome_', '');
+        
+        // Award points to referrer for purchase (5% of purchase amount as points)
+        const pointsEarned = Math.min(Math.floor(amount * 0.05), 5000); // Cap at 5000 points
+        
+        await this.addPoints(
+          referrerId, 
+          pointsEarned, 
+          'earned', 
+          'referral_purchase', 
+          `Referral purchase bonus (${amount} purchase)`, 
+          `ref_purchase_${buyerId}`
+        );
+
+        console.log(`Referral purchase bonus: ${referrerId} gets ${pointsEarned} points for ${buyerId} purchase`);
+      }
+    } catch (error) {
+      console.error("Error processing referral purchase:", error);
+    }
   }
 
   // Wallet operations
