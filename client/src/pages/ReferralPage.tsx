@@ -28,20 +28,39 @@ export default function ReferralPage() {
   const { user } = useAuth();
   const { showSuccess } = useToastEnhanced();
 
-  // Mock data - replace with real API
-  const referralData = {
+  const { data: referralData } = useQuery({
+    queryKey: ['/api/referral/stats'],
+    queryFn: async () => {
+      const response = await fetch('/api/referral/stats');
+      if (!response.ok) throw new Error('Failed to fetch referral stats');
+      return response.json();
+    },
+  });
+
+  const { data: referralHistory = [] } = useQuery({
+    queryKey: ['/api/referral/history'],
+    queryFn: async () => {
+      const response = await fetch('/api/referral/history');
+      if (!response.ok) throw new Error('Failed to fetch referral history');
+      return response.json();
+    },
+  });
+
+  const defaultReferralData = {
     referralCode: user?.referralCode || "USER123ABC",
-    totalReferrals: 24,
-    activeReferrals: 18,
-    totalEarned: 45000,
-    pendingEarnings: 8500,
-    thisMonthEarnings: 12000,
-    conversionRate: 75, // percentage
+    totalReferrals: 0,
+    activeReferrals: 0,
+    totalEarned: 0,
+    pendingEarnings: 0,
+    thisMonthEarnings: 0,
+    conversionRate: 0,
     nextMilestone: 50,
     milestoneReward: 10000
   };
 
-  const referralHistory = [
+  const currentReferralData = referralData || defaultReferralData;
+
+  const defaultReferralHistory = [
     { 
       id: 1, 
       name: "John Doe", 
@@ -85,18 +104,18 @@ export default function ReferralPage() {
   ];
 
   const copyReferralCode = () => {
-    navigator.clipboard.writeText(referralData.referralCode);
+    navigator.clipboard.writeText(currentReferralData.referralCode);
     showSuccess("Copied!", "Referral code copied to clipboard");
   };
 
   const shareReferralLink = () => {
-    const referralLink = `${window.location.origin}?ref=${referralData.referralCode}`;
+    const referralLink = `${window.location.origin}?ref=${currentReferralData.referralCode}`;
     navigator.clipboard.writeText(referralLink);
     showSuccess("Copied!", "Referral link copied to clipboard");
   };
 
   const shareOnSocial = (platform: string) => {
-    const referralLink = `${window.location.origin}?ref=${referralData.referralCode}`;
+    const referralLink = `${window.location.origin}?ref=${currentReferralData.referralCode}`;
     const message = "Join AgentMarket and discover amazing AI agents! Use my referral code to get started.";
     
     let shareUrl = "";
@@ -140,7 +159,7 @@ export default function ReferralPage() {
                   <div>
                     <p className="text-blue-800 dark:text-blue-200 text-sm font-medium">Total Referrals</p>
                     <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">
-                      {referralData.totalReferrals}
+                      {currentReferralData.totalReferrals}
                     </p>
                   </div>
                   <Users className="h-8 w-8 text-blue-600" />
@@ -153,7 +172,7 @@ export default function ReferralPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Active Referrals</p>
-                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{referralData.activeReferrals}</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-white">{currentReferralData.activeReferrals}</p>
                   </div>
                   <CheckCircle className="h-8 w-8 text-green-600" />
                 </div>
@@ -165,7 +184,7 @@ export default function ReferralPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">Total Earned</p>
-                    <p className="text-2xl font-bold text-green-600">{referralData.totalEarned.toLocaleString()}</p>
+                    <p className="text-2xl font-bold text-green-600">{currentReferralData.totalEarned.toLocaleString()}</p>
                     <p className="text-xs text-gray-500">points</p>
                   </div>
                   <DollarSign className="h-8 w-8 text-green-600" />
@@ -178,7 +197,7 @@ export default function ReferralPage() {
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="text-sm font-medium text-gray-600">This Month</p>
-                    <p className="text-2xl font-bold text-purple-600">{referralData.thisMonthEarnings.toLocaleString()}</p>
+                    <p className="text-2xl font-bold text-purple-600">{currentReferralData.thisMonthEarnings.toLocaleString()}</p>
                     <p className="text-xs text-gray-500">points earned</p>
                   </div>
                   <TrendingUp className="h-8 w-8 text-purple-600" />
@@ -200,7 +219,7 @@ export default function ReferralPage() {
                 <CardContent className="space-y-4">
                   <div className="flex items-center space-x-2">
                     <Input 
-                      value={referralData.referralCode} 
+                      value={currentReferralData.referralCode} 
                       readOnly 
                       className="font-mono text-center text-lg bg-gray-50 dark:bg-gray-800"
                     />
@@ -320,9 +339,9 @@ export default function ReferralPage() {
                   <div className="mb-4">
                     <div className="flex justify-between text-sm mb-2">
                       <span>Progress to next milestone</span>
-                      <span>{referralData.totalReferrals}/{referralData.nextMilestone}</span>
+                      <span>{currentReferralData.totalReferrals}/{currentReferralData.nextMilestone}</span>
                     </div>
-                    <Progress value={(referralData.totalReferrals / referralData.nextMilestone) * 100} />
+                    <Progress value={(currentReferralData.totalReferrals / currentReferralData.nextMilestone) * 100} />
                   </div>
 
                   {milestones.map((milestone, index) => (

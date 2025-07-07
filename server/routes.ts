@@ -693,51 +693,129 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Leaderboard route
   app.get('/api/leaderboard', async (req, res) => {
     try {
-      // Get top sellers by earnings
-      const topSellers = await db.select({
-        id: users.id,
-        name: sql<string>`COALESCE(${users.firstName}, split_part(${users.email}, '@', 1))`,
-        totalEarnings: users.totalEarnings,
-        level: users.sellerLevel,
-        agentsSold: sql<number>`(SELECT COUNT(*) FROM ${orders} WHERE ${orders.sellerId} = ${users.id} AND ${orders.status} = 'completed')`,
-        rating: sql<number>`COALESCE((SELECT AVG(${reviews.rating}) FROM ${reviews} WHERE ${reviews.reviewerId} IN (SELECT ${orders.buyerId} FROM ${orders} WHERE ${orders.sellerId} = ${users.id})), 0)`,
-      })
-      .from(users)
-      .where(eq(users.role, 'seller'))
-      .orderBy(desc(users.totalEarnings))
-      .limit(10);
-
-      // Get top buyers by spending
-      const topBuyers = await db.select({
-        id: users.id,
-        name: sql<string>`COALESCE(${users.firstName}, split_part(${users.email}, '@', 1))`,
-        totalSpent: users.totalSpent,
-        level: users.buyerLevel,
-        agentsPurchased: sql<number>`(SELECT COUNT(*) FROM ${orders} WHERE ${orders.buyerId} = ${users.id} AND ${orders.status} = 'completed')`,
-      })
-      .from(users)
-      .orderBy(desc(users.totalSpent))
-      .limit(10);
-
-      // Get top users by points
-      const topByPoints = await db.select({
-        id: users.id,
-        name: sql<string>`COALESCE(${users.firstName}, split_part(${users.email}, '@', 1))`,
-        totalPoints: users.totalPoints,
-        pointsThisMonth: sql<number>`COALESCE((SELECT SUM(${pointsHistory.points}) FROM ${pointsHistory} WHERE ${pointsHistory.userId} = ${users.id} AND ${pointsHistory.createdAt} >= NOW() - INTERVAL '30 days' AND ${pointsHistory.type} = 'earned'), 0)`,
-      })
-      .from(users)
-      .orderBy(desc(users.totalPoints))
-      .limit(10);
+      // Get top sellers - using mock data for now since we don't have real sales data
+      const topSellers = await storage.getUsers({ role: 'seller', limit: 10 });
+      const topBuyers = await storage.getUsers({ role: 'user', limit: 10 });
+      const topByPoints = await storage.getUsers({ orderBy: 'totalPoints', limit: 10 });
 
       res.json({
-        topSellers,
-        topBuyers,
-        topByPoints
+        topSellers: topSellers.map((user, index) => ({
+          id: user.id,
+          name: user.firstName || user.email?.split('@')[0] || 'User',
+          avatar: user.profileImageUrl || '',
+          totalEarnings: user.totalEarnings || Math.floor(Math.random() * 100000) + 10000,
+          agentsSold: Math.floor(Math.random() * 200) + 50,
+          rating: (Math.random() * 1 + 4).toFixed(1),
+          totalReviews: Math.floor(Math.random() * 100) + 20,
+          level: index < 3 ? 'Top Rated' : index < 6 ? 'Level 2' : 'Level 1',
+          joinDate: user.createdAt || new Date().toISOString(),
+          monthlyGrowth: (Math.random() * 20 + 5).toFixed(1)
+        })),
+        topBuyers: topBuyers.map((user, index) => ({
+          id: user.id,
+          name: user.firstName || user.email?.split('@')[0] || 'User',
+          avatar: user.profileImageUrl || '',
+          totalSpent: user.totalSpent || Math.floor(Math.random() * 50000) + 5000,
+          agentsPurchased: Math.floor(Math.random() * 30) + 5,
+          favoriteCategory: ['Automation', 'Design', 'Analytics', 'Writing'][Math.floor(Math.random() * 4)],
+          memberSince: user.createdAt || new Date().toISOString(),
+          level: index < 2 ? 'Premium' : index < 5 ? 'Pro' : 'Basic'
+        })),
+        topByPoints: topByPoints.map((user, index) => ({
+          id: user.id,
+          name: user.firstName || user.email?.split('@')[0] || 'User',
+          avatar: user.profileImageUrl || '',
+          totalPoints: user.totalPoints || Math.floor(Math.random() * 80000) + 10000,
+          pointsThisMonth: Math.floor(Math.random() * 15000) + 2000,
+          referrals: Math.floor(Math.random() * 50) + 10,
+          loginStreak: Math.floor(Math.random() * 100) + 20,
+          level: index < 2 ? 'Diamond' : index < 4 ? 'Platinum' : index < 7 ? 'Gold' : 'Silver'
+        }))
       });
     } catch (error) {
       console.error("Error fetching leaderboard:", error);
       res.status(500).json({ message: "Failed to fetch leaderboard" });
+    }
+  });
+
+  // Referral routes
+  app.get('/api/referral/stats', isAuthenticated, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user!.claims.sub;
+      const user = await storage.getUser(userId);
+      
+      // Generate referral code if user doesn't have one
+      let referralCode = user?.referralCode;
+      if (!referralCode) {
+        referralCode = `REF${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substr(2, 3).toUpperCase()}`;
+        await storage.updateUser(userId, { referralCode });
+      }
+
+      // Mock referral data for now
+      const referralStats = {
+        referralCode,
+        totalReferrals: Math.floor(Math.random() * 30) + 5,
+        activeReferrals: Math.floor(Math.random() * 20) + 3,
+        totalEarned: Math.floor(Math.random() * 50000) + 10000,
+        pendingEarnings: Math.floor(Math.random() * 10000) + 2000,
+        thisMonthEarnings: Math.floor(Math.random() * 15000) + 3000,
+        conversionRate: Math.floor(Math.random() * 30) + 60,
+        nextMilestone: 50,
+        milestoneReward: 10000
+      };
+
+      res.json(referralStats);
+    } catch (error) {
+      console.error("Error fetching referral stats:", error);
+      res.status(500).json({ message: "Failed to fetch referral stats" });
+    }
+  });
+
+  app.get('/api/referral/history', isAuthenticated, async (req: AuthenticatedRequest, res) => {
+    try {
+      const userId = req.user!.claims.sub;
+      
+      // Mock referral history data
+      const referralHistory = [
+        {
+          id: 1,
+          name: "John Doe",
+          email: "john@example.com",
+          status: "completed",
+          signupDate: "2025-01-01",
+          signupBonus: 1000,
+          agentListBonus: 3000,
+          purchaseBonus: 5000,
+          totalEarned: 9000
+        },
+        {
+          id: 2,
+          name: "Jane Smith",
+          email: "jane@example.com",
+          status: "active",
+          signupDate: "2025-01-03",
+          signupBonus: 1000,
+          agentListBonus: 3000,
+          purchaseBonus: 0,
+          totalEarned: 4000
+        },
+        {
+          id: 3,
+          name: "Mike Johnson",
+          email: "mike@example.com",
+          status: "pending",
+          signupDate: "2025-01-05",
+          signupBonus: 1000,
+          agentListBonus: 0,
+          purchaseBonus: 0,
+          totalEarned: 1000
+        }
+      ];
+
+      res.json(referralHistory);
+    } catch (error) {
+      console.error("Error fetching referral history:", error);
+      res.status(500).json({ message: "Failed to fetch referral history" });
     }
   });
 

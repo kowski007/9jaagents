@@ -432,7 +432,6 @@ export class PostgreSQLStorage implements IStorage {
       );
   }
 
-  // Points and Referral operations
   async getUserPoints(userId: string): Promise<number> {
     const user = await this.getUser(userId);
     return user?.totalPoints || 0;
@@ -488,13 +487,13 @@ export class PostgreSQLStorage implements IStorage {
         )
       )
       .limit(1);
-    
+
     return existing.length > 0;
   }
 
   async recordDailyLogin(userId: string): Promise<number> {
     const today = new Date().toISOString().split('T')[0];
-    
+
     // Check if already logged in today
     const alreadyLoggedIn = await this.checkDailyLogin(userId);
     if (alreadyLoggedIn) {
@@ -544,6 +543,32 @@ export class PostgreSQLStorage implements IStorage {
     await db.update(notifications)
       .set({ isRead: true })
       .where(eq(notifications.userId, userId));
+  }
+  async getUsers(filters?: { role?: string; orderBy?: string; limit?: number }): Promise<User[]> {
+    let query = await db.select().from(users);
+
+    if (filters?.role) {
+      query = (query as any).where(eq(users.role, filters.role as any));
+    }
+
+    if (filters?.orderBy === 'totalPoints') {
+      query = (query as any).orderBy(desc(users.totalPoints));
+    }
+
+    if (filters?.limit) {
+      query = (query as any).limit(filters.limit);
+    }
+
+    return query;
+  }
+
+  async updateUser(id: string, data: Partial<User>): Promise<User | undefined> {
+    const result = await db
+      .update(users)
+      .set(data)
+      .where(eq(users.id, id))
+      .returning();
+    return result[0];
   }
 }
 

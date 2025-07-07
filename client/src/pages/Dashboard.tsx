@@ -26,7 +26,8 @@ import {
   Target,
   Menu,
   X,
-  Coins
+  Coins,
+  Users
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToastEnhanced } from "@/hooks/useToastEnhanced";
