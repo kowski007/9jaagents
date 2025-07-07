@@ -26,6 +26,7 @@ import ReferralPage from "@/pages/ReferralPage";
 import LeaderboardPage from "@/pages/LeaderboardPage";
 import WalletPage from "@/pages/WalletPage";
 import SellerWalletPage from "@/pages/SellerWalletPage";
+import AdminLoginPage from "@/pages/AdminLoginPage";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -38,8 +39,10 @@ function Router() {
         <Route path="/marketplace" component={ImprovedMarketplace} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/seller-dashboard" component={SellerDashboard} />
-        <Route path="/admin" component={SuperAdminDashboard} />
-        <Route path="/admin-enhanced" component={EnhancedAdminDashboard} />
+        <Route path="/admin-login" component={AdminLoginPage} />
+        <Route path="/admin" component={AdminDashboard} />
+        <Route path="/enhanced-admin" component={EnhancedAdminDashboard} />
+        <Route path="/super-admin" component={SuperAdminDashboard} />
         <Route path="/list-agent" component={ListAgent} />
         <Route path="/create-agent" component={ListAgent} />
         <Route path="/checkout" component={Checkout} />

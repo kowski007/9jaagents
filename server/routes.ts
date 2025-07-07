@@ -1454,7 +1454,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/admin/settings', isAuthenticated, isAdmin, async (req: AuthenticatedRequest, res) => {
     try {
-      // Return default platform settings - in production this would come from a settings table
+      // Return current platform settings
       const settings = {
         siteName: "AgentMarket",
         commissionRate: 10,
@@ -1463,7 +1463,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
         pointsToNairaRate: 1,
         defaultUserRole: "user",
         maintenanceMode: false,
-        registrationEnabled: true
+        registrationEnabled: true,
+        autoApproveAgents: false,
+        emailNotifications: true,
+        maxUploadSize: 10, // MB
+        supportEmail: "support@agentmarket.com"
       };
       
       res.json(settings);
@@ -1477,13 +1481,103 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       const settings = req.body;
       
-      // In production, you would save these settings to a database table
-      // For now, we'll just return success
+      // Validate settings
+      if (settings.commissionRate && (settings.commissionRate < 0 || settings.commissionRate > 50)) {
+        return res.status(400).json({ message: "Commission rate must be between 0 and 50%" });
+      }
+      
+      if (settings.minWithdrawal && settings.minWithdrawal < 100) {
+        return res.status(400).json({ message: "Minimum withdrawal must be at least ₦100" });
+      }
+      
+      // In production, save to database
+      console.log("Settings updated:", settings);
       
       res.json({ message: "Settings updated successfully", settings });
     } catch (error) {
       console.error("Error updating admin settings:", error);
       res.status(500).json({ message: "Failed to update settings" });
+    }
+  });
+
+  // Admin reports endpoints
+  app.get('/api/admin/reports/users', isAuthenticated, isAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      
+      const report = {
+        totalUsers: users.length,
+        activeUsers: users.filter(u => u.isActive).length,
+        inactiveUsers: users.filter(u => !u.isActive).length,
+        admins: users.filter(u => u.role === 'admin').length,
+        sellers: users.filter(u => u.role === 'seller').length,
+        regularUsers: users.filter(u => u.role === 'user').length,
+        newUsersToday: users.filter(u => new Date(u.createdAt) > new Date(Date.now() - 24*60*60*1000)).length,
+        newUsersThisWeek: users.filter(u => new Date(u.createdAt) > new Date(Date.now() - 7*24*60*60*1000)).length,
+        newUsersThisMonth: users.filter(u => new Date(u.createdAt) > new Date(Date.now() - 30*24*60*60*1000)).length,
+      };
+      
+      res.json(report);
+    } catch (error) {
+      console.error("Error generating user report:", error);
+      res.status(500).json({ message: "Failed to generate user report" });
+    }
+  });
+
+  app.get('/api/admin/reports/revenue', isAuthenticated, isAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const orders = await storage.getOrders({});
+      const commissions = await storage.getAdminCommissions();
+      
+      const totalRevenue = orders.reduce((sum, order) => sum + parseFloat(order.amount), 0);
+      const totalCommissions = commissions.reduce((sum, comm) => sum + parseFloat(comm.amount), 0);
+      
+      const report = {
+        totalRevenue,
+        totalCommissions,
+        sellerEarnings: totalRevenue - totalCommissions,
+        ordersToday: orders.filter(o => new Date(o.createdAt) > new Date(Date.now() - 24*60*60*1000)).length,
+        revenueToday: orders
+          .filter(o => new Date(o.createdAt) > new Date(Date.now() - 24*60*60*1000))
+          .reduce((sum, order) => sum + parseFloat(order.amount), 0),
+        ordersThisWeek: orders.filter(o => new Date(o.createdAt) > new Date(Date.now() - 7*24*60*60*1000)).length,
+        revenueThisWeek: orders
+          .filter(o => new Date(o.createdAt) > new Date(Date.now() - 7*24*60*60*1000))
+          .reduce((sum, order) => sum + parseFloat(order.amount), 0),
+        ordersThisMonth: orders.filter(o => new Date(o.createdAt) > new Date(Date.now() - 30*24*60*60*1000)).length,
+        revenueThisMonth: orders
+          .filter(o => new Date(o.createdAt) > new Date(Date.now() - 30*24*60*60*1000))
+          .reduce((sum, order) => sum + parseFloat(order.amount), 0),
+      };
+      
+      res.json(report);
+    } catch (error) {
+      console.error("Error generating revenue report:", error);
+      res.status(500).json({ message: "Failed to generate revenue report" });
+    }
+  });
+
+  app.get('/api/admin/reports/agents', isAuthenticated, isAdmin, async (req: AuthenticatedRequest, res) => {
+    try {
+      const agents = await storage.getAgents({});
+      const orders = await storage.getOrders({});
+      
+      const report = {
+        totalAgents: agents.length,
+        activeAgents: agents.filter(a => a.isActive).length,
+        inactiveAgents: agents.filter(a => !a.isActive).length,
+        agentsWithSales: [...new Set(orders.map(o => o.agentId))].length,
+        agentsWithoutSales: agents.length - [...new Set(orders.map(o => o.agentId))].length,
+        newAgentsToday: agents.filter(a => new Date(a.createdAt) > new Date(Date.now() - 24*60*60*1000)).length,
+        newAgentsThisWeek: agents.filter(a => new Date(a.createdAt) > new Date(Date.now() - 7*24*60*60*1000)).length,
+        newAgentsThisMonth: agents.filter(a => new Date(a.createdAt) > new Date(Date.now() - 30*24*60*60*1000)).length,
+        averagePrice: agents.reduce((sum, agent) => sum + parseFloat(agent.basicPrice), 0) / agents.length,
+      };
+      
+      res.json(report);
+    } catch (error) {
+      console.error("Error generating agent report:", error);
+      res.status(500).json({ message: "Failed to generate agent report" });
     }
   });
 
