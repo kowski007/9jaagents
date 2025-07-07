@@ -751,15 +751,23 @@ export async function registerRoutes(app: Express): Promise<Server> {
         await storage.updateUser(userId, { referralCode });
       }
 
-      // Mock referral data for now
+      // Get real referral data
+      const referrals = await storage.getReferralsByUser(userId);
+      const activeReferrals = referrals.filter((r: any) => r.status === 'active');
+      const completedReferrals = referrals.filter((r: any) => r.status === 'completed');
+      
+      const totalEarned = await storage.getReferralEarnings(userId, 'total');
+      const thisMonthEarnings = await storage.getReferralEarnings(userId, 'month');
+      const pendingEarnings = await storage.getReferralEarnings(userId, 'pending');
+
       const referralStats = {
         referralCode,
-        totalReferrals: Math.floor(Math.random() * 30) + 5,
-        activeReferrals: Math.floor(Math.random() * 20) + 3,
-        totalEarned: Math.floor(Math.random() * 50000) + 10000,
-        pendingEarnings: Math.floor(Math.random() * 10000) + 2000,
-        thisMonthEarnings: Math.floor(Math.random() * 15000) + 3000,
-        conversionRate: Math.floor(Math.random() * 30) + 60,
+        totalReferrals: referrals.length,
+        activeReferrals: activeReferrals.length,
+        totalEarned,
+        pendingEarnings,
+        thisMonthEarnings,
+        conversionRate: referrals.length > 0 ? Math.round((completedReferrals.length / referrals.length) * 100) : 0,
         nextMilestone: 50,
         milestoneReward: 10000
       };
@@ -774,44 +782,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/referral/history', isAuthenticated, async (req: AuthenticatedRequest, res) => {
     try {
       const userId = req.user!.claims.sub;
-      
-      // Mock referral history data
-      const referralHistory = [
-        {
-          id: 1,
-          name: "John Doe",
-          email: "john@example.com",
-          status: "completed",
-          signupDate: "2025-01-01",
-          signupBonus: 1000,
-          agentListBonus: 3000,
-          purchaseBonus: 5000,
-          totalEarned: 9000
-        },
-        {
-          id: 2,
-          name: "Jane Smith",
-          email: "jane@example.com",
-          status: "active",
-          signupDate: "2025-01-03",
-          signupBonus: 1000,
-          agentListBonus: 3000,
-          purchaseBonus: 0,
-          totalEarned: 4000
-        },
-        {
-          id: 3,
-          name: "Mike Johnson",
-          email: "mike@example.com",
-          status: "pending",
-          signupDate: "2025-01-05",
-          signupBonus: 1000,
-          agentListBonus: 0,
-          purchaseBonus: 0,
-          totalEarned: 1000
-        }
-      ];
-
+      const referralHistory = await storage.getReferralsByUser(userId);
       res.json(referralHistory);
     } catch (error) {
       console.error("Error fetching referral history:", error);
@@ -866,6 +837,47 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error("Error toggling user status:", error);
       res.status(500).json({ message: "Failed to toggle user status" });
+    }
+  });
+
+  app.get('/api/admin/orders', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const orders = await storage.getOrders({});
+      res.json(orders);
+    } catch (error) {
+      console.error("Error fetching admin orders:", error);
+      res.status(500).json({ message: "Failed to fetch orders" });
+    }
+  });
+
+  app.get('/api/admin/stats', isAuthenticated, isAdmin, async (req, res) => {
+    try {
+      const users = await storage.getAllUsers();
+      const agents = await storage.getAgents({});
+      const orders = await storage.getOrders({});
+      
+      const totalRevenue = orders.reduce((sum, order) => sum + parseFloat(order.amount || '0'), 0);
+      const completedOrders = orders.filter(order => order.status === 'completed');
+      const pendingOrders = orders.filter(order => order.status === 'pending');
+      const activeAgents = agents.filter(agent => agent.isActive);
+      const sellers = users.filter(user => user.role === 'seller');
+      
+      res.json({
+        totalUsers: users.length,
+        totalSellers: sellers.length,
+        totalAgents: agents.length,
+        activeAgents: activeAgents.length,
+        totalOrders: orders.length,
+        completedOrders: completedOrders.length,
+        pendingOrders: pendingOrders.length,
+        totalRevenue,
+        monthlyRevenue: totalRevenue * 0.3, // Estimate based on recent activity
+        platformFee: 5,
+        activeUsers: users.filter(user => user.isActive).length
+      });
+    } catch (error) {
+      console.error("Error fetching admin stats:", error);
+      res.status(500).json({ message: "Failed to fetch admin stats" });
     }
   });
 

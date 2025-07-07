@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
@@ -90,10 +89,13 @@ export default function Dashboard() {
   const activeOrders = orders.filter((order: any) => 
     order.status === 'pending' || order.status === 'in_progress'
   );
-  const completedOrders = orders.filter((order: any) => order.status === 'completed');
-  const totalSpent = completedOrders.reduce((sum: number, order: any) => 
-    sum + parseFloat(order.totalAmount), 0
-  );
+
+  // Calculate real stats from data
+  const completedOrders = orders?.filter((order: any) => order.status === 'completed') || [];
+  const totalSpent = completedOrders.reduce((sum: number, order: any) => sum + parseFloat(order.amount || 0), 0);
+  const agentsPurchased = completedOrders.length;
+  const favoriteAgents = favorites?.length || 0;
+  const recentActivity = orders?.length || 0;
 
   const favoriteAgents = favorites.map((fav: any) => 
     agents.find((agent: any) => agent.id === fav.agentId)
@@ -119,7 +121,7 @@ export default function Dashboard() {
           </p>
         </div>
       </div>
-      
+
       <nav className="space-y-1">
         <Button 
           variant={activeTab === "overview" ? "default" : "ghost"} 
@@ -347,7 +349,9 @@ export default function Dashboard() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm text-purple-600 dark:text-purple-400 font-medium">Total Spent</p>
-                          <p className="text-2xl font-bold text-purple-700 dark:text-purple-300">${totalSpent.toFixed(2)}</p>
+                          <p className="text-3xl font-bold text-blue-900 dark:text-blue-100">
+                        ${totalSpent.toFixed(2)}
+                      </p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">All time</p>
                         </div>
                         <div className="bg-purple-100 dark:bg-purple-900 p-3 rounded-full">
@@ -362,7 +366,7 @@ export default function Dashboard() {
                       <div className="flex items-center justify-between">
                         <div>
                           <p className="text-sm text-orange-600 dark:text-orange-400 font-medium">Favorites</p>
-                          <p className="text-2xl font-bold text-orange-700 dark:text-orange-300">{(favorites as any[]).length}</p>
+                          <p className="text-2xl font-bold text-gray-900 dark:text-white">{agentsPurchased}</p>
                           <p className="text-xs text-gray-500 dark:text-gray-400">Saved agents</p>
                         </div>
                         <div className="bg-orange-100 dark:bg-orange-900 p-3 rounded-full">
@@ -427,19 +431,23 @@ export default function Dashboard() {
                           <p className="text-sm">No activity yet</p>
                         </div>
                       ) : (
-                        <div className="space-y-3">
-                          {orders.slice(0, 3).map((order: any) => (
-                            <div key={order.id} className="flex items-center space-x-3">
-                              <div className="bg-primary/10 p-2 rounded-full">
-                                <ShoppingCart className="h-4 w-4 text-primary" />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <p className="text-sm font-medium truncate">Order #{order.id}</p>
-                                <p className="text-xs text-gray-500">${order.totalAmount}</p>
-                              </div>
-                            </div>
-                          ))}
+                        <div className="space-y-4">
+                    {orders?.slice(0, 5).map((order: any) => (
+<div className="flex items-center justify-between p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                          <div>
+                            <h4 className="font-semibold text-gray-900 dark:text-white">Order #{order.id}</h4>
+                            <p className="text-sm text-gray-600 dark:text-gray-400">Agent ID: {order.agentId}</p>
+                            <p className="text-xs text-gray-500">{new Date(order.createdAt).toLocaleDateString()}</p>
+                          </div>
+                          <div className="text-right">
+                            <Badge variant={order.status === 'completed' ? 'default' : 'secondary'}>
+                              {order.status}
+                            </Badge>
+                            <p className="text-sm font-semibold text-green-600 mt-1">${order.amount}</p>
+                          </div>
                         </div>
+                    ))}
+                  </div>
                       )}
                     </CardContent>
                   </Card>
@@ -734,7 +742,7 @@ export default function Dashboard() {
         </div>
       </div>
       </div>
-      
+
       <BecomeSellerModal 
         isOpen={showBecomeSellerModal} 
         onClose={() => setShowBecomeSellerModal(false)} 

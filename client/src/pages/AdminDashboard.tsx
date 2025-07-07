@@ -93,7 +93,16 @@ export default function AdminDashboard() {
     },
   });
 
-  if (usersLoading || agentsLoading || ordersLoading) {
+  const { data: adminStats, isLoading: statsLoading } = useQuery({
+    queryKey: ['/api/admin/stats'],
+    queryFn: async () => {
+      const response = await fetch('/api/admin/stats');
+      if (!response.ok) throw new Error('Failed to fetch admin stats');
+      return response.json();
+    },
+  });
+
+  if (usersLoading || agentsLoading || ordersLoading || statsLoading) {
     return (
       <Layout>
         <div className="flex items-center justify-center min-h-screen bg-gradient-to-br from-purple-50 to-violet-50">
@@ -108,16 +117,16 @@ export default function AdminDashboard() {
     );
   }
 
-  // Calculate stats
-  const stats: DashboardStats = {
-    totalUsers: (users as any)?.length || 0,
-    totalAgents: (agents as any)?.length || 0,
-    totalOrders: (orders as any)?.length || 0,
-    totalRevenue: (orders as any)?.reduce((sum: number, order: any) => sum + (order.totalAmount || 0), 0) || 0,
-    pendingOrders: (orders as any)?.filter((order: any) => order.status === 'pending')?.length || 0,
-    activeAgents: (agents as any)?.filter((agent: any) => agent.isActive)?.length || 0,
-    userGrowth: 12.5,
-    revenueGrowth: 8.2,
+  // Use real stats from API
+  const stats: DashboardStats = adminStats || {
+    totalUsers: 0,
+    totalAgents: 0,
+    totalOrders: 0,
+    totalRevenue: 0,
+    pendingOrders: 0,
+    activeAgents: 0,
+    userGrowth: 0,
+    revenueGrowth: 0,
   };
 
   const formatCurrency = (amount: number) => {

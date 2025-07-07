@@ -570,6 +570,32 @@ export class PostgreSQLStorage implements IStorage {
       .returning();
     return result[0];
   }
+
+  async getReferralsByUser(userId: string): Promise<any[]> {
+    // For now, return empty array since referral table doesn't exist yet
+    // In a real implementation, you'd query a referrals table
+    return [];
+  }
+
+  async getReferralEarnings(userId: string, period: 'total' | 'month' | 'pending'): Promise<number> {
+    // Get referral-related points from points history
+    let query = db.select().from(pointsHistory)
+      .where(
+        and(
+          eq(pointsHistory.userId, userId),
+          like(pointsHistory.source, '%referral%')
+        )
+      );
+
+    if (period === 'month') {
+      const monthAgo = new Date();
+      monthAgo.setMonth(monthAgo.getMonth() - 1);
+      query = query.where(sql`${pointsHistory.createdAt} >= ${monthAgo.toISOString()}`);
+    }
+
+    const referralPoints = await query;
+    return referralPoints.reduce((sum, point) => sum + point.points, 0);
+  }
 }
 
 export const storage = new PostgreSQLStorage();

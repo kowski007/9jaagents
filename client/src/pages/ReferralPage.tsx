@@ -60,41 +60,7 @@ export default function ReferralPage() {
 
   const currentReferralData = referralData || defaultReferralData;
 
-  const defaultReferralHistory = [
-    { 
-      id: 1, 
-      name: "John Doe", 
-      email: "john@example.com", 
-      status: "completed",
-      signupDate: "2025-07-01",
-      signupBonus: 1000,
-      agentListBonus: 3000,
-      purchaseBonus: 5000,
-      totalEarned: 9000
-    },
-    { 
-      id: 2, 
-      name: "Jane Smith", 
-      email: "jane@example.com", 
-      status: "active",
-      signupDate: "2025-07-03",
-      signupBonus: 1000,
-      agentListBonus: 3000,
-      purchaseBonus: 0,
-      totalEarned: 4000
-    },
-    { 
-      id: 3, 
-      name: "Mike Johnson", 
-      email: "mike@example.com", 
-      status: "pending",
-      signupDate: "2025-07-05",
-      signupBonus: 1000,
-      agentListBonus: 0,
-      purchaseBonus: 0,
-      totalEarned: 1000
-    }
-  ];
+  
 
   const milestones = [
     { referrals: 10, reward: 5000, completed: true },
@@ -260,7 +226,12 @@ export default function ReferralPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    {referralHistory.map((referral) => (
+                    {referralHistory.length === 0 ? (
+                      <div className="text-center py-8">
+                        <p className="text-gray-500">No referrals yet. Start sharing your code to earn rewards!</p>
+                      </div>
+                    ) : (
+                      referralHistory.map((referral) => (
                       <div key={referral.id} className="flex items-center justify-between p-4 border rounded-lg">
                         <div className="flex items-center space-x-3">
                           <Avatar>
@@ -284,7 +255,8 @@ export default function ReferralPage() {
                           </div>
                         </div>
                       </div>
-                    ))}
+                    ))
+                    )}
                   </div>
                 </CardContent>
               </Card>

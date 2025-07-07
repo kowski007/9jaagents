@@ -98,111 +98,8 @@ export default function LeaderboardPage() {
     }
   ];
 
-  const topBuyers = leaderboardData?.topBuyers || [
-    {
-      id: 1,
-      name: "Tech Startup Inc",
-      avatar: "",
-      totalSpent: 45000,
-      agentsPurchased: 28,
-      favoriteCategory: "Automation",
-      memberSince: "2024-01-10",
-      level: "Premium"
-    },
-    {
-      id: 2,
-      name: "Digital Agency",
-      avatar: "",
-      totalSpent: 38500,
-      agentsPurchased: 22,
-      favoriteCategory: "Design",
-      memberSince: "2024-02-15",
-      level: "Pro"
-    },
-    {
-      id: 3,
-      name: "E-commerce Solutions",
-      avatar: "",
-      totalSpent: 32000,
-      agentsPurchased: 19,
-      favoriteCategory: "Analytics",
-      memberSince: "2024-03-01",
-      level: "Pro"
-    },
-    {
-      id: 4,
-      name: "Content Creator Hub",
-      avatar: "",
-      totalSpent: 28750,
-      agentsPurchased: 17,
-      favoriteCategory: "Writing",
-      memberSince: "2024-03-20",
-      level: "Basic"
-    },
-    {
-      id: 5,
-      name: "Marketing Experts",
-      avatar: "",
-      totalSpent: 25600,
-      agentsPurchased: 15,
-      favoriteCategory: "Analytics",
-      memberSince: "2024-04-01",
-      level: "Basic"
-    }
-  ];
-
-  const topByPoints = leaderboardData?.topByPoints || [
-    {
-      id: 1,
-      name: "Points Master",
-      avatar: "",
-      totalPoints: 87500,
-      pointsThisMonth: 12300,
-      referrals: 45,
-      loginStreak: 89,
-      level: "Diamond"
-    },
-    {
-      id: 2,
-      name: "Referral King",
-      avatar: "",
-      totalPoints: 76200,
-      pointsThisMonth: 9800,
-      referrals: 38,
-      loginStreak: 67,
-      level: "Platinum"
-    },
-    {
-      id: 3,
-      name: "Daily Champion",
-      avatar: "",
-      totalPoints: 65400,
-      pointsThisMonth: 8500,
-      referrals: 32,
-      loginStreak: 156,
-      level: "Gold"
-    },
-    {
-      id: 4,
-      name: "Active Trader",
-      avatar: "",
-      totalPoints: 58900,
-      pointsThisMonth: 7200,
-      referrals: 28,
-      loginStreak: 45,
-      level: "Gold"
-    },
-    {
-      id: 5,
-      name: "Community Helper",
-      avatar: "",
-      totalPoints: 52300,
-      pointsThisMonth: 6100,
-      referrals: 24,
-      loginStreak: 78,
-      level: "Silver"
-    }
-  ];
+  const topBuyers = leaderboardData?.topBuyers || [];
+  const topByPoints = leaderboardData?.topByPoints || [];
 
   const getRankIcon = (rank: number) => {
     switch(rank) {
@@ -251,7 +148,7 @@ export default function LeaderboardPage() {
                 <div className="text-sm text-gray-600">Active Sellers</div>
               </CardContent>
             </Card>
-            
+
             <Card className="text-center">
               <CardContent className="p-6">
                 <Users className="h-8 w-8 text-blue-500 mx-auto mb-2" />
@@ -259,7 +156,7 @@ export default function LeaderboardPage() {
                 <div className="text-sm text-gray-600">Total Buyers</div>
               </CardContent>
             </Card>
-            
+
             <Card className="text-center">
               <CardContent className="p-6">
                 <Bot className="h-8 w-8 text-purple-500 mx-auto mb-2" />
@@ -267,7 +164,7 @@ export default function LeaderboardPage() {
                 <div className="text-sm text-gray-600">AI Agents</div>
               </CardContent>
             </Card>
-            
+
             <Card className="text-center">
               <CardContent className="p-6">
                 <Coins className="h-8 w-8 text-green-500 mx-auto mb-2" />
