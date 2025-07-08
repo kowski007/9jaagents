@@ -222,7 +222,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => window.location.href = '/api/login'}
+                  onClick={() => window.location.href = '/login'}
                 >
                   <Bot className="mr-2 h-4 w-4" />
                   Continue with Replit
@@ -303,6 +303,8 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                         size="sm"
                         className="absolute right-0 top-0 h-full px-3 py-2 hover:bg-transparent"
                         onClick={() => setShowPassword(!showPassword)}
+                        tabIndex={-1}
+                        aria-label={showPassword ? "Hide password" : "Show password"}
                       >
                         {showPassword ? (
                           <EyeOff className="h-4 w-4 text-gray-400" />
@@ -363,7 +365,7 @@ export default function AuthModal({ isOpen, onClose }: AuthModalProps) {
                 <Button 
                   variant="outline" 
                   className="w-full"
-                  onClick={() => window.location.href = '/api/login'}
+                  onClick={() => window.location.href = '/login'}
                 >
                   <Bot className="mr-2 h-4 w-4" />
                   Continue with Replit

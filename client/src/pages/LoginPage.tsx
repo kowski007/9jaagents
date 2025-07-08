@@ -99,7 +99,7 @@ export default function LoginPage() {
                   Sign up
                 </Button>
               </p>
-              <Button variant="link" onClick={() => window.location.href = '/api/login'} className="text-sm">
+              <Button variant="link" onClick={() => window.location.href = '/login'} className="text-sm">
                 Or continue with Replit Auth
               </Button>
             </div>

@@ -43,6 +43,10 @@ export default function Header() {
     }
   };
 
+  const [location] = useLocation();
+  // Don't show AuthModal on login, signup, or admin-login pages
+  const hideAuthModal = ["/login", "/signup", "/admin-login"].includes(location);
+
   return (
     <>
       <header className="bg-white dark:bg-gray-900 shadow-sm border-b dark:border-gray-800 sticky top-0 z-50">
@@ -55,19 +59,19 @@ export default function Header() {
               </Link>
 
               <div className="hidden md:flex items-center space-x-8">
-              <Link href="/" className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">
-                Home
-              </Link>
-              <Link href="/marketplace" className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">
-                Marketplace
-              </Link>
-              <Link href="/leaderboard" className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">
-                Rank
-              </Link>
-              <Link href="/about" className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">
-                About
-              </Link>
-            </div>
+                <Link href="/" className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">
+                  Home
+                </Link>
+                <Link href="/marketplace" className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">
+                  Marketplace
+                </Link>
+                <Link href="/leaderboard" className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">
+                  Rank
+                </Link>
+                <Link href="/about" className="text-gray-600 dark:text-gray-300 hover:text-primary dark:hover:text-primary transition-colors">
+                  About
+                </Link>
+              </div>
             </div>
 
             <div className="flex items-center space-x-4">
@@ -184,7 +188,9 @@ export default function Header() {
       </header>
 
       <CartSidebar isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
-      <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+      {!hideAuthModal && (
+        <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
+      )}
     </>
   );
 }

@@ -64,7 +64,7 @@ export default function AdminLoginPage() {
   };
 
   const handleReauthenticate = () => {
-    window.location.href = '/api/login';
+    window.location.href = '/admin-login';
   };
 
   if (isAuthenticated && user?.role !== 'admin') {

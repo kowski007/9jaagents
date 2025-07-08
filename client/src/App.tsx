@@ -29,6 +29,7 @@ import SellerWalletPage from "@/pages/SellerWalletPage";
 import AdminLoginPage from "@/pages/AdminLoginPage";
 import SignupPage from "@/pages/SignupPage";
 import LoginPage from "@/pages/LoginPage";
+import AgentDetailPage from "@/pages/AgentDetailPage";
 
 function Router() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -39,6 +40,7 @@ function Router() {
       <Switch>
         <Route path="/" component={Landing} />
         <Route path="/marketplace" component={ImprovedMarketplace} />
+        <Route path="/agent/:agentId" component={AgentDetailPage} />
         <Route path="/create-agent" component={ListAgent} />
         <Route path="/dashboard" component={Dashboard} />
         <Route path="/seller-dashboard" component={SellerDashboard} />

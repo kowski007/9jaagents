@@ -118,6 +118,57 @@ export default function ImprovedMarketplace() {
 
   const featuredCategories = categories.slice(0, 6);
 
+  // HARDCODED: Extended categories list
+  const extendedCategories = [
+    "Data scientists",
+    "Bolt and Uber indrive",
+    "Loan",
+    "Flight bookings",
+    "Universities",
+    "Schools",
+    "Elections",
+    "Sport",
+    "Companies registration",
+    "Lawyers",
+    "Real Estate",
+    "Delivery 🚚",
+    "Content Creation",
+    "Pharmacy",
+    "Computer Village",
+    "Insurance",
+    "Alaba",
+    "DJ",
+    "Rents",
+    "Ev naija",
+    "Fuel",
+    "Local governments",
+    "Movies",
+    "Cinema",
+    "Restaurants",
+    "Politics",
+    "Police",
+    "Law",
+    "Auto sales",
+    "Traffic",
+    "Travel tickets",
+    "Food",
+    "Churches",
+    "Cleaning services",
+    "Snacks",
+    "Jobs",
+    "Iron sales",
+    "Advert",
+    "Events"
+  ];
+  // Merge with categories from API (avoid duplicates)
+  const safeCategories = Array.isArray(categories) ? categories : [];
+  const allCategories = [
+    ...safeCategories,
+    ...extendedCategories.filter(
+      (cat) => !safeCategories.some((c: any) => c.name === cat)
+    ).map((name, i) => ({ id: `x-${i}`, name }))
+  ];
+
   return (
     <Layout>
       <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
@@ -151,7 +202,7 @@ export default function ImprovedMarketplace() {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="all">All Categories</SelectItem>
-                      {categories.map((category) => (
+                      {allCategories.map((category) => (
                         <SelectItem key={category.id} value={category.id.toString()}>
                           {category.name}
                         </SelectItem>

@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { useQuery } from "@tanstack/react-query";
 import { useLocation } from "wouter";
@@ -135,7 +134,7 @@ export default function Landing() {
               size="lg" 
               variant="outline" 
               className="px-8 py-3 text-lg border-blue-200 hover:bg-blue-50 dark:border-blue-800 dark:hover:bg-blue-900"
-              onClick={() => window.location.href = '/api/login'}
+              onClick={() => window.location.href = '/login'}
             >
               <ShoppingCart className="mr-2 h-5 w-5" />
               Start Selling
@@ -349,7 +348,7 @@ export default function Landing() {
               size="lg" 
               variant="outline" 
               className="border-white text-white hover:bg-white hover:text-blue-600 px-8 py-3 text-lg"
-              onClick={() => window.location.href = '/api/login'}
+              onClick={() => window.location.href = '/login'}
             >
               Get Started Free
               <ArrowRight className="ml-2 h-5 w-5" />
@@ -376,7 +375,7 @@ export default function Landing() {
               <ul className="space-y-2">
                 <li>
                   <button 
-                    onClick={() => window.location.href = '/api/login'}
+                    onClick={() => window.location.href = '/login'}
                     className="text-gray-300 hover:text-white transition-colors"
                   >
                     Sell Agents

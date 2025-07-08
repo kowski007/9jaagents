@@ -112,7 +112,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
 
   const handleCheckout = () => {
     if (!isAuthenticated) {
-      window.location.href = '/api/login';
+      window.location.href = '/login';
       return;
     }
     
@@ -129,7 +129,7 @@ export default function CartSidebar({ isOpen, onClose }: CartSidebarProps) {
           </SheetHeader>
           <div className="flex flex-col items-center justify-center h-full">
             <p className="text-gray-500 mb-4">Please sign in to view your cart</p>
-            <Button onClick={() => window.location.href = '/api/login'}>
+            <Button onClick={() => window.location.href = '/login'}>
               Sign In
             </Button>
           </div>

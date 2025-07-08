@@ -47,7 +47,7 @@ export default function Dashboard() {
     if (!isLoading && !isAuthenticated) {
       showError("Unauthorized", "You are logged out. Logging in again...");
       setTimeout(() => {
-        window.location.href = "/api/login";
+        window.location.href = "/login";
       }, 500);
       return;
     }
@@ -234,7 +234,7 @@ export default function Dashboard() {
               }}
             >
               <Star className="mr-3 h-4 w-4" />
-              Seller Dashboard
+              Switch to Seller
             </Button>
           ) : (
             <Button 

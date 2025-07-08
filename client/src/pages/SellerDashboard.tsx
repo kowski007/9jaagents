@@ -44,7 +44,7 @@ export default function SellerDashboard() {
     if (!isLoading && !isAuthenticated) {
       showError("Unauthorized", "You are logged out. Logging in again...");
       setTimeout(() => {
-        window.location.href = "/api/login";
+        window.location.href = "/login";
       }, 500);
       return;
     }
@@ -81,7 +81,7 @@ export default function SellerDashboard() {
       if (isUnauthorizedError(error)) {
         showError("Unauthorized", "You are logged out. Logging in again...");
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/login";
         }, 500);
         return;
       }

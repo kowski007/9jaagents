@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { useLocation } from "wouter";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
@@ -94,6 +93,58 @@ export default function CreateAgent() {
     enabled: isAuthenticated,
   });
 
+  // Ensure categories is always an array
+  const safeCategories = Array.isArray(categories) ? categories : [];
+  // HARDCODED: Extended categories list
+  const extendedCategories = [
+    "Data scientists",
+    "Bolt and Uber indrive",
+    "Loan",
+    "Flight bookings",
+    "Universities",
+    "Schools",
+    "Elections",
+    "Sport",
+    "Companies registration",
+    "Lawyers",
+    "Real Estate",
+    "Delivery 🚚",
+    "Content Creation",
+    "Pharmacy",
+    "Computer Village",
+    "Insurance",
+    "Alaba",
+    "DJ",
+    "Rents",
+    "Ev naija",
+    "Fuel",
+    "Local governments",
+    "Movies",
+    "Cinema",
+    "Restaurants",
+    "Politics",
+    "Police",
+    "Law",
+    "Auto sales",
+    "Traffic",
+    "Travel tickets",
+    "Food",
+    "Churches",
+    "Cleaning services",
+    "Snacks",
+    "Jobs",
+    "Iron sales",
+    "Advert",
+    "Events"
+  ];
+  // Merge with categories from API (avoid duplicates)
+  const allCategories = [
+    ...safeCategories,
+    ...extendedCategories.filter(
+      (cat) => !safeCategories.some((c: any) => c.name === cat)
+    ).map((name, i) => ({ id: `x-${i}`, name }))
+  ];
+
   // Create agent mutation
   const createAgentMutation = useMutation({
     mutationFn: async (agentData: any) => {
@@ -117,7 +168,7 @@ export default function CreateAgent() {
           variant: "destructive",
         });
         setTimeout(() => {
-          window.location.href = "/api/login";
+          window.location.href = "/login";
         }, 500);
         return;
       }
@@ -248,7 +299,7 @@ export default function CreateAgent() {
                     <SelectValue placeholder="Select a category" />
                   </SelectTrigger>
                   <SelectContent>
-                    {categories.map((category: any) => (
+                    {allCategories.map((category: any) => (
                       <SelectItem key={category.id} value={category.id.toString()}>
                         {category.name}
                       </SelectItem>
@@ -779,7 +830,7 @@ export default function CreateAgent() {
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Category</p>
-                    <p className="font-medium">{categories.find((c: any) => c.id.toString() === formData.categoryId)?.name}</p>
+                    <p className="font-medium">{allCategories.find((c: any) => c.id.toString() === formData.categoryId)?.name}</p>
                   </div>
                   <div>
                     <p className="text-sm text-gray-600 mb-1">Basic Price</p>
@@ -823,7 +874,6 @@ export default function CreateAgent() {
             </div>
           </div>
         );
-
       default:
         return null;
     }

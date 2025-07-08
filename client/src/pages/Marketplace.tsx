@@ -81,6 +81,57 @@ export default function Marketplace() {
     return true;
   });
 
+  // HARDCODED: Extended categories list
+  const extendedCategories = [
+    "Data scientists",
+    "Bolt and Uber indrive",
+    "Loan",
+    "Flight bookings",
+    "Universities",
+    "Schools",
+    "Elections",
+    "Sport",
+    "Companies registration",
+    "Lawyers",
+    "Real Estate",
+    "Delivery 🚚",
+    "Content Creation",
+    "Pharmacy",
+    "Computer Village",
+    "Insurance",
+    "Alaba",
+    "DJ",
+    "Rents",
+    "Ev naija",
+    "Fuel",
+    "Local governments",
+    "Movies",
+    "Cinema",
+    "Restaurants",
+    "Politics",
+    "Police",
+    "Law",
+    "Auto sales",
+    "Traffic",
+    "Travel tickets",
+    "Food",
+    "Churches",
+    "Cleaning services",
+    "Snacks",
+    "Jobs",
+    "Iron sales",
+    "Advert",
+    "Events"
+  ];
+  // Merge with categories from API (avoid duplicates)
+  const safeCategories = Array.isArray(categories) ? categories : [];
+  const allCategories = [
+    ...safeCategories,
+    ...extendedCategories.filter(
+      (cat) => !safeCategories.some((c: any) => c.name === cat)
+    ).map((name, i) => ({ id: `x-${i}`, name }))
+  ];
+
   return (
     <Layout>
       <div className="bg-white dark:bg-gray-900">
@@ -134,7 +185,7 @@ export default function Marketplace() {
                     >
                       All Categories
                     </Button>
-                    {categories.map((category: any) => {
+                    {allCategories.map((category: any) => {
                       const IconComponent = categoryIcons[category.name as keyof typeof categoryIcons] || Bot;
                       return (
                         <Button
